@@ -12,10 +12,7 @@ data Bin : Set where
   _I : Bin → Bin
 
 inc : Bin → Bin
-inc ⟨⟩ = ⟨⟩
-inc (next O) = next I
-inc (⟨⟩ I)   = ⟨⟩ I O
-inc (next I) = (inc next) O
+inc a = a I
 
 to : ℕ → Bin
 to zero = ⟨⟩ O
@@ -29,7 +26,7 @@ from ⟨⟩ = 0
 _ : to 0 ≡  ⟨⟩ O
 _ = refl
 
-_ : to 4 ≡ ⟨⟩ I I I I
+_ : to 4 ≡ ⟨⟩ O I I I I
 _ = refl
 
 pwoof :  ∀ {n : ℕ} → from (to n) ≡ n
