@@ -10,6 +10,7 @@ open import Data.Fin.Properties hiding (bounded)
 import Data.Fin as F
 open import Data.Vec
 open import Relation.Binary.PropositionalEquality
+open import Data.Product hiding (map)
 
 addℕ : ℕ → ℕ → ℕ
 addℕ zero x = x
@@ -123,10 +124,10 @@ homo1 : {n : ℕ} → interpretV (oneV {n}) ≡ 1
 homo1 {zero} = refl
 homo1 {suc n} rewrite homo0 {n} = refl
 
-mulV : {m n : ℕ} → Bits m → Bits n → Bits (m * n)
+mulV : {x y : Set} {m n : ℕ} → (Vec x m) → (Vec y n) → Vec (Vec (x × y) n) m
 mulV [] y = []
-mulV (false ∷ xs) y = mulV xs y
-mulV (true ∷ xs) y = addV y $ mulV xs y
+mulV xs ys =
+   map (\x → map (\y → (x , y)) ys ) xs
 
 -- homoAddV : interpretV (addV x y) ≡ interpretV x + interpretV y
 homoMulV : {m n : ℕ} → (x : Bits m) → (y : Bits n) → interpretV (mulV x y) ≡ interpretV x * interpretV y
