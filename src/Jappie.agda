@@ -26,8 +26,11 @@ from (x I) = suc (from x)
 from (x O) = (from x)
 from ⟨⟩ = 0
 
-pwoof :  ∀ {n : ℕ} → from (to n) ≡ n
-pwoof 0 =  refl
-
 _ : to 0 ≡  ⟨⟩ O
 _ = refl
+
+_ : to 4 ≡ ⟨⟩ I I I I
+_ = refl
+
+pwoof :  ∀ {n : ℕ} → from (to n) ≡ n
+pwoof 0 =  refl
