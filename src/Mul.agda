@@ -151,6 +151,16 @@ proof-mult bval false true = refl
 proof-mult bval true false = refl
 proof-mult bval true true = refl
 
+data Three : Set where
+  one : Three
+  two : Three
+  three : Three
+
+interpretThree : Three → Fin 3
+interpretThree one = zero
+interpretThree two = suc zero
+interpretThree three = suc (suc zero)
+
 
 _ : mult (compose bvalA bval) (true , true) (true , true) ≡ ((true , false) , (false , true))
 _ = refl
