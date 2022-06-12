@@ -192,16 +192,22 @@ compose
     → IsMult μ
     → IsMult {τ × τ} {size * size} (composeMultFin μ)
 IsMult.mult (compose adder multipler) (a , b) (c , d) =
-  let (achi , aclo) = multipler .mult a c -- x2
-      (adhi , adlo) = multipler .mult a d
-      (bdhi , bdlo) = multipler .mult b d
-      (bchi , bclo) = multipler .mult b c
+  let (k , l) = multipler .mult a c -- x2
+      (g , h) = multipler .mult a d
+      (e , f) = multipler .mult b d
+      (i , j) = multipler .mult b c
 
-      (bottomhi' , carry1)  = add3Adder adder zero   bdhi adlo bclo
-      (hibottom' , carry2)  = add3Adder adder carry1 aclo bchi adhi
+      (ehj , carry1)  = add3Adder adder zero   e h j
+      (lig , carry2)  = add3Adder adder carry1 l i g
 
       -- (ax + b) * (cx + d) = (acx^2 + bcx + adx + bd)
-   in (proj₁ (adder .add (carry2 , achi , multipler .zeroM)) , hibottom') , (bottomhi' , bdlo)
+      -- bd = (ex + f)
+      -- ad = (gx + h)
+      -- bc = (ix + j)
+      -- ac = (kx + l)
+      -- = (kx + l)x^2 + (ix + j)x + (gx + h)x + (ex + f))
+      -- = (kx^3 + (l + i + g)x^2 + (j + h + e)x + f
+   in (proj₁ (adder .add (carry2 , k , multipler .zeroM)) , lig) , (ehj , f)
 IsMult.zeroM (compose adder multipler) = multipler .zeroM  , multipler .zeroM
 IsMult.proof-mult (compose {μ = μ} adder multipler) ab@(a , b) cd@(c , d) =
   begin
