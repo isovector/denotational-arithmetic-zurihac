@@ -5,6 +5,7 @@ open import Data.Bool hiding (_<_; _≤_)
 open import Data.Nat
 open import Data.Nat.Properties
 open import Data.Product hiding (map)
+import Data.Product as P
 open import Data.Fin hiding (_+_; _<_; _≤_)
 open import Data.Fin.Properties hiding (bounded)
 import Data.Fin as F
@@ -51,6 +52,9 @@ mulF : {m n : ℕ} → Fin (suc m) → Fin (suc n) → Fin (suc (m * n))
 mulF zero y = zero
 mulF {suc m} {n} (suc x) y = addF y (mulF x y)
 
+
+
+
 im-finna-mul
     : {m n : ℕ}
     → (x : Fin (suc m))
@@ -80,6 +84,10 @@ interpret2^ (false ∷ y) = inject+ _ (interpret2^ y)
 interpret2^ {suc m} (true ∷ y) rewrite +-comm (2 ^ m) (0 * 2 ^ m) =
   2 ^ m Fℕ+ interpret2^ {m} y
 
+
+interpretBF : Bool → Fin 2
+interpretBF false = zero
+interpretBF true = suc zero
 
 interpretB : Bool → ℕ
 interpretB false = 0
@@ -141,123 +149,171 @@ mulV (true ∷ xs) y = addV y $ mulV xs y
 --   -- where open ≡-Reasoning
 -- homoMulV (true ∷ xs) y = {! !}
 
-record IsSemiring {A : Set} (μ : A → ℕ) : Set where
+-- (
+
+add3 : ∀ {m n p} → Fin m × Fin n × Fin p → ℕ
+add3 (m , n , p) = toℕ m + toℕ n + toℕ p
+
+digitize : ∀ {m n} → Fin m × Fin n → ℕ
+digitize = toℕ ∘ uncurry combine
+
+record IsAdd {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
+  constructor adds
   field
-    -- some constraint on a-size
-    a-size : ℕ
-    add : A → A → Bool × A
-    mult : A → A → A × A
-    zero' : A
-    one : A
-    proof-zero : μ zero' ≡ 0
-    proof-one : μ one ≡ 1
+    add : Fin 2 × τ × τ → τ × Fin 2
+    proof-add
+      : (mnp : Fin 2 × τ × τ)
+      → digitize (P.map μ id (add mnp)) ≡ add3 (P.map id (P.map μ μ) mnp)
 
-  carry-size : Bool × A → ℕ
-  carry-size = λ { (overflow , result) → (if overflow then a-size else 0) + μ result }
-
-  mult-size : A × A → ℕ
-  mult-size = λ { (hi , lo) → μ hi * a-size + μ lo }
-
+record IsMult {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
+  constructor multiples
   field
-    proof-add : (m n : A) → carry-size (add m n) ≡ μ m + μ n
-    proof-mult : (m n : A) → mult-size (mult m n) ≡ μ m * μ n
+    mult : τ → τ → τ × τ
+    zeroM : τ
+    proof-mult
+      : (m n : τ)
+      → digitize (P.map μ μ (mult m n)) ≡ toℕ (μ m) * toℕ (μ n)
 
-open IsSemiring
+open IsAdd
+open IsMult
 
-bval : IsSemiring interpretB
-a-size bval = 2
-add bval false false = false , false
-add bval false true = false , true
-add bval true false = false , true
-add bval true true = true , false
+module _ {τ : Set} {size : ℕ} {μ : τ → Fin size} where
+  add3Adder : IsAdd μ → Fin 2 → τ → τ → τ → τ × Fin 2
+  add3Adder (adds add _) cin a b c =
+    let (ab , cout) = add (cin , a , b)
+     in add (cout , ab , c)
+
+composeMultFin : {τ : Set} → {size : ℕ} → (μ : τ → Fin size) → τ × τ → Fin (size * size)
+composeMultFin μ = uncurry combine ∘ P.map μ μ
+
+compose
+    : {τ : Set} → {size : ℕ} → {μ : τ → Fin size}
+    → IsAdd μ
+    → IsMult μ
+    → IsMult {τ × τ} {size * size} (composeMultFin μ)
+IsMult.mult (compose adder multipler) (a , b) (c , d) =
+  let (achi , aclo) = multipler .mult a c -- x2
+      (adhi , adlo) = multipler .mult a d
+      (bdhi , bdlo) = multipler .mult b d
+      (bchi , bclo) = multipler .mult b c
+
+      (bottomhi' , carry1)  = add3Adder adder zero   bdhi adlo bclo
+      (hibottom' , carry2)  = add3Adder adder carry1 aclo bchi adhi
+
+      -- (ax + b) * (cx + d) = (acx^2 + bcx + adx + bd)
+   in (proj₁ (adder .add (carry2 , achi , multipler .zeroM)) , hibottom') , (bottomhi' , bdlo)
+IsMult.zeroM (compose adder multipler) = multipler .zeroM  , multipler .zeroM
+IsMult.proof-mult (compose {μ = μ} adder multipler) ab@(a , b) cd@(c , d) =
+  begin
+    digitize
+     (P.map (composeMultFin μ) (composeMultFin μ)
+      (mult (compose adder multipler) ab cd))
+  ≡⟨⟩
+    (toℕ ∘ uncurry combine)
+     (P.map (composeMultFin μ) (composeMultFin μ)
+      (mult (compose adder multipler) ab cd))
+  ≡⟨ ? ⟩
+    toℕ ((composeMultFin μ) ab) * toℕ ((composeMultFin μ) cd)
+  ∎
+  where open ≡-Reasoning
+
+-- digitize : ∀ {m n} → Fin m × Fin n → ℕ
+-- digitize = toℕ ∘ uncurry combine
+
+
+-- -- 9 : Fin 10 *
+-- -- 8 : Fin 10
+
+-- -- v (hi : Fin 10)
+-- --  v (lo : Fin 10)
+-- -- 72 : Fin 100
+
+
+open IsMult
+
+bval : IsMult interpretBF
+-- add bval = ?
 mult bval false false = false , false
 mult bval false true = false , false
 mult bval true false = false , false
 mult bval true true = false , true
-zero' bval = false
-one bval = true
-proof-zero bval = refl
-proof-one bval = refl
-proof-add bval false false = refl
-proof-add bval false true = refl
-proof-add bval true false = refl
-proof-add bval true true = refl
+zeroM bval = false
 proof-mult bval false false = refl
 proof-mult bval false true = refl
 proof-mult bval true false = refl
 proof-mult bval true true = refl
 
-compose
-  : ∀ {A B}
-  → {μ1 : A → ℕ} {μ2 : B → ℕ}
-  → (f : IsSemiring μ1)
-  → (g : IsSemiring μ2)
-  → IsSemiring {A × B} λ { (a , b) → (μ1 a) * g .a-size + μ2 b }
-a-size (compose f g) = f .a-size * g .a-size
-add (compose f g) (xhi , xlo) (yhi , ylo) =
-  let (cb , b) = g .add xlo ylo
-      (ca , a) = f .add xhi yhi
-   in case cb of λ
-        { false → ca , a , b
-        ; true → ca , ? , b
-        }
-mult (compose f g) (xhi , xlo) (yhi , ylo) =
-  let (bhi , blo) = g .mult xlo ylo
-      (ahi , alo) = f .mult xhi yhi
-   in (ahi , bhi) , (alo , blo)
-zero' (compose f g) = f .zero' , g .zero'
-one (compose f g) = f .zero' , g .one
-proof-zero (compose f g)
-  rewrite proof-zero f
-        | proof-zero g = refl
-proof-one (compose f g)
-  rewrite proof-zero f
-        | proof-one g = refl
-proof-add (compose f g) = {! !}
-proof-mult (compose f g) (ahi , bhi) (alo , blo) = {! !}
+-- compose
+--   : ∀ {A B}
+--   → {μ1 : A → ℕ} {μ2 : B → ℕ}
+--   → (f : IsMult μ1)
+--   → (g : IsMult μ2)
+--   → IsMult {A × B} λ { (a , b) → (μ1 a) * g .a-size + μ2 b }
+-- a-size (compose f g) = f .a-size * g .a-size
+-- add (compose f g) (xhi , xlo) (yhi , ylo) =
+--   let (cb , b) = g .add xlo ylo
+--       (ca , a) = f .add xhi yhi
+--    in case cb of λ
+--         { false → ca , a , b
+--         ; true → ca , ? , b
+--         }
+-- mult (compose f g) (xhi , xlo) (yhi , ylo) =
+--   let (bhi , blo) = g .mult xlo ylo
+--       (ahi , alo) = f .mult xhi yhi
+--    in (ahi , bhi) , (alo , blo)
+-- zero' (compose f g) = f .zero' , g .zero'
+-- one (compose f g) = f .zero' , g .one
+-- proof-zero (compose f g)
+--   rewrite proof-zero f
+--         | proof-zero g = refl
+-- proof-one (compose f g)
+--   rewrite proof-zero f
+--         | proof-one g = refl
+-- proof-add (compose f g) = {! !}
+-- proof-mult (compose f g) (ahi , bhi) (alo , blo) = {! !}
 
 
 
 
--- combine : IsMult A → IsMult B → IsMult (A × B)
+-- -- combine : IsMult A → IsMult B → IsMult (A × B)
 
 
 
--- multV : {m n : ℕ} → Bits m → Bits n → Vec (Bits m) n
--- multV x y = ?
+-- -- multV : {m n : ℕ} → Bits m → Bits n → Vec (Bits m) n
+-- -- multV x y = ?
 
--- mult' : τ → σ → τ × σ
-
-
--- addV : {m n : ℕ} → Bits m → Bits n → Bits (suc (m ⊔ n))
--- addV = ?
+-- -- mult' : τ → σ → τ × σ
 
 
-
--- _ : mulℕ 2 5 ≡ 10
--- _ = refl
-
-
--- toBool : Fin 2 → Bool
--- toBool zero = false
--- toBool (suc x) = true
-
--- splice : {m : ℕ} → Fin (2 ^ m) → Vec Bool m
--- splice {zero} x = []
--- splice {suc m} x =
---   let b , f = remQuot {2} (2 ^ m) x
---    in toBool b ∷ splice f
-
--- sixteen : Fin 16
--- sixteen = inject+ _ (fromℕ 15)
+-- -- addV : {m n : ℕ} → Bits m → Bits n → Bits (suc (m ⊔ n))
+-- -- addV = ?
 
 
--- _ : interpret2^ {4} (splice sixteen) ≡ sixteen
--- _ = refl
 
--- -- -- addV : {m n : ℕ} → Vec Bool m → Vec Bool n → Fin (2 ^ m + 2 ^ n)
--- -- -- addV a b = interpret2^ a + interpret2^ b
+-- -- _ : mulℕ 2 5 ≡ 10
+-- -- _ = refl
 
--- -- -- mulV : {m n : ℕ} → Vec Bool m → Vec Bool n → Fin (2 ^ (m + n))
--- -- -- mulV a b = {! !}
+
+-- -- toBool : Fin 2 → Bool
+-- -- toBool zero = false
+-- -- toBool (suc x) = true
+
+-- -- splice : {m : ℕ} → Fin (2 ^ m) → Vec Bool m
+-- -- splice {zero} x = []
+-- -- splice {suc m} x =
+-- --   let b , f = remQuot {2} (2 ^ m) x
+-- --    in toBool b ∷ splice f
+
+-- -- sixteen : Fin 16
+-- -- sixteen = inject+ _ (fromℕ 15)
+
+
+-- -- _ : interpret2^ {4} (splice sixteen) ≡ sixteen
+-- -- _ = refl
+
+-- -- -- -- addV : {m n : ℕ} → Vec Bool m → Vec Bool n → Fin (2 ^ m + 2 ^ n)
+-- -- -- -- addV a b = interpret2^ a + interpret2^ b
+
+-- -- -- -- mulV : {m n : ℕ} → Vec Bool m → Vec Bool n → Fin (2 ^ (m + n))
+-- -- -- -- mulV a b = {! !}
 
