@@ -60,7 +60,7 @@ mulF' : {m n : ℕ} → Fin m → Fin n → Fin (m * n)
 mulF' zero zero = zero
 mulF' zero (suc n) = zero
 mulF' (suc m) zero = zero
-mulF' {m = suc m} {suc n} (suc x) (suc y) = suc {! addF' !}
+mulF' {m = suc m} {suc n} (suc x) (suc y) = suc (addF' (suc y) (mulF' x (suc y)))
 
 
 
@@ -219,7 +219,7 @@ IsMult.mult (compose adder multipler) (a , b) (c , d) =
       -- = (kx^3 + (l + i + g)x^2 + (j + h + e)x + f
    in (proj₁ (adder .add (carry2 , k , multipler .zeroM)) , lig) , (ehj , f)
 IsMult.zeroM (compose adder multipler) = multipler .zeroM  , multipler .zeroM
-IsMult.proof-mult (compose {μ = μ} adder multipler) ab@(a , b) cd@(c , d) = ?
+IsMult.proof-mult (compose {μ = μ} adder multipler) ab@(a , b) cd@(c , d) = {!!}
   -- begin
   --   digitize
   --    (P.map (composeMultFin μ) (composeMultFin μ)
@@ -255,9 +255,9 @@ mult bval true false = false , false
 mult bval true true = false , true
 zeroM bval = false
 proof-mult bval false false = refl
-proof-mult bval false true = ?
-proof-mult bval true false = ?
-proof-mult bval true true = ?
+proof-mult bval false true = {!!}
+proof-mult bval true false = {!!}
+proof-mult bval true true = {!!}
 
 -- compose
 --   : ∀ {A B}
