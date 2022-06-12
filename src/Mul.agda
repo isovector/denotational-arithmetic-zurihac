@@ -60,7 +60,9 @@ mulF' : {m n : ℕ} → Fin m → Fin n → Fin (m * n)
 mulF' zero zero = zero
 mulF' zero (suc n) = zero
 mulF' (suc m) zero = zero
-mulF' {m = suc m} {suc n} (suc x) (suc y) = suc (addF' (suc y) (mulF' x (suc y)))
+mulF' {m = suc m} {suc n} (suc x) (suc y) = inject₁ (addF' (suc y) (mulF' x (suc y)))
+
+-- _ : mulF' (suc zero) (suc zero) ≡
 
 
 
@@ -182,7 +184,8 @@ record IsMult {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
     zeroM : τ
     proof-mult
       : (m n : τ)
-      → uncurry combine (P.map μ μ (mult m n)) ≡ mulF' (μ m) (μ n)
+      → uncurry combine (P.map μ μ (mult m n))  -- 1
+      ≡ mulF' (μ m) (μ n)  -- 2
 
 open IsAdd
 open IsMult
@@ -196,42 +199,30 @@ module _ {τ : Set} {size : ℕ} {μ : τ → Fin size} where
 composeMultFin : {τ : Set} → {size : ℕ} → (τ → Fin size) → (τ × τ → Fin (size * size))
 composeMultFin μ = uncurry combine ∘ P.map μ μ
 
-compose
-    : {τ : Set} {size : ℕ} {μ : τ → Fin size}
-    → IsAdd μ
-    → IsMult μ
-    → IsMult {τ × τ} {size * size} (composeMultFin μ)
-IsMult.mult (compose adder multipler) (a , b) (c , d) =
-  let (k , l) = multipler .mult a c -- x2
-      (g , h) = multipler .mult a d
-      (e , f) = multipler .mult b d
-      (i , j) = multipler .mult b c
+-- compose
+--     : {τ : Set} {size : ℕ} {μ : τ → Fin size}
+--     → IsAdd μ
+--     → IsMult μ
+--     → IsMult {τ × τ} {size * size} (composeMultFin μ)
+-- IsMult.mult (compose adder multipler) (a , b) (c , d) =
+--   let (k , l) = multipler .mult a c -- x2
+--       (g , h) = multipler .mult a d
+--       (e , f) = multipler .mult b d
+--       (i , j) = multipler .mult b c
 
-      (ehj , carry1)  = add3Adder adder zero   e h j
-      (lig , carry2)  = add3Adder adder carry1 l i g
+--       (ehj , carry1)  = add3Adder adder zero   e h j
+--       (lig , carry2)  = add3Adder adder carry1 l i g
 
-      -- (ax + b) * (cx + d) = (acx^2 + bcx + adx + bd)
-      -- bd = (ex + f)
-      -- ad = (gx + h)
-      -- bc = (ix + j)
-      -- ac = (kx + l)
-      -- = (kx + l)x^2 + (ix + j)x + (gx + h)x + (ex + f))
-      -- = (kx^3 + (l + i + g)x^2 + (j + h + e)x + f
-   in (proj₁ (adder .add (carry2 , k , multipler .zeroM)) , lig) , (ehj , f)
-IsMult.zeroM (compose adder multipler) = multipler .zeroM  , multipler .zeroM
-IsMult.proof-mult (compose {μ = μ} adder multipler) ab@(a , b) cd@(c , d) = {!!}
-  -- begin
-  --   digitize
-  --    (P.map (composeMultFin μ) (composeMultFin μ)
-  --     (mult (compose adder multipler) ab cd))
-  -- ≡⟨⟩
-  --   (toℕ ∘ uncurry combine)
-  --    (P.map (composeMultFin μ) (composeMultFin μ)
-  --     (mult (compose adder multipler) ab cd))
-  -- ≡⟨ ? ⟩
-  --   toℕ (composeMultFin μ ab) * toℕ (composeMultFin μ cd)
-  -- ∎
-  -- where open ≡-Reasoning
+--       -- (ax + b) * (cx + d) = (acx^2 + bcx + adx + bd)
+--       -- bd = (ex + f)
+--       -- ad = (gx + h)
+--       -- bc = (ix + j)
+--       -- ac = (kx + l)
+--       -- = (kx + l)x^2 + (ix + j)x + (gx + h)x + (ex + f))
+--       -- = (kx^3 + (l + i + g)x^2 + (j + h + e)x + f
+--    in (proj₁ (adder .add (carry2 , k , multipler .zeroM)) , lig) , (ehj , f)
+-- IsMult.zeroM (compose adder multipler) = multipler .zeroM  , multipler .zeroM
+-- IsMult.proof-mult (compose {μ = μ} adder multipler) ab@(a , b) cd@(c , d) = {!!}
 
 -- digitize : ∀ {m n} → Fin m × Fin n → ℕ
 -- digitize = toℕ ∘ uncurry combine
@@ -255,38 +246,9 @@ mult bval true false = false , false
 mult bval true true = false , true
 zeroM bval = false
 proof-mult bval false false = refl
-proof-mult bval false true = {!!}
-proof-mult bval true false = {!!}
-proof-mult bval true true = {!!}
-
--- compose
---   : ∀ {A B}
---   → {μ1 : A → ℕ} {μ2 : B → ℕ}
---   → (f : IsMult μ1)
---   → (g : IsMult μ2)
---   → IsMult {A × B} λ { (a , b) → (μ1 a) * g .a-size + μ2 b }
--- a-size (compose f g) = f .a-size * g .a-size
--- add (compose f g) (xhi , xlo) (yhi , ylo) =
---   let (cb , b) = g .add xlo ylo
---       (ca , a) = f .add xhi yhi
---    in case cb of λ
---         { false → ca , a , b
---         ; true → ca , ? , b
---         }
--- mult (compose f g) (xhi , xlo) (yhi , ylo) =
---   let (bhi , blo) = g .mult xlo ylo
---       (ahi , alo) = f .mult xhi yhi
---    in (ahi , bhi) , (alo , blo)
--- zero' (compose f g) = f .zero' , g .zero'
--- one (compose f g) = f .zero' , g .one
--- proof-zero (compose f g)
---   rewrite proof-zero f
---         | proof-zero g = refl
--- proof-one (compose f g)
---   rewrite proof-zero f
---         | proof-one g = refl
--- proof-add (compose f g) = {! !}
--- proof-mult (compose f g) (ahi , bhi) (alo , blo) = {! !}
+proof-mult bval false true = refl
+proof-mult bval true false = refl
+proof-mult bval true true = refl
 
 
 
