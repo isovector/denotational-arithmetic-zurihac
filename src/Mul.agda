@@ -1,40 +1,23 @@
 module Mul where
 
-open import Function
-open import Data.Bool hiding (_<_; _≤_)
-open import Data.Nat
+open import Function.Base
+open import Data.Bool.Base hiding (_<_; _≤_)
+open import Data.Nat.Base
 open import Data.Nat.Properties
-open import Data.Product hiding (map)
-import Data.Product as P
-open import Data.Fin hiding (_+_; _<_; _≤_)
+open import Data.Product as P hiding (map)
+open import Data.Fin.Base as F hiding (_+_; _<_; _≤_)
 open import Data.Fin.Properties hiding (bounded)
-import Data.Fin as F
-open import Data.Vec
 open import Relation.Binary.PropositionalEquality
-
-addℕ : ℕ → ℕ → ℕ
-addℕ zero x = x
-addℕ (suc a) x = suc (addℕ a x)
-
 
 addF' : {m n : ℕ} → Fin (suc m) → Fin n → Fin (m + n)
 addF' {m} {n} (zero {x}) y = cast (+-comm n m) (inject+ m y)
 addF' {suc m} {n} (suc x) y = suc (addF' x y)
-
-mulℕ : ℕ → ℕ → ℕ
-mulℕ zero b = zero
-mulℕ (suc a) b = b + mulℕ a b
 
 mulF' : {m n : ℕ} → Fin m → Fin n → Fin (m * n)
 mulF' zero zero = zero
 mulF' zero (suc n) = zero
 mulF' (suc m) zero = zero
 mulF' {m = suc m} {suc n} (suc x) (suc y) = inject₁ (addF' (suc y) (mulF' x (suc y)))
-
-
-Bits : ℕ → Set
-Bits = Vec Bool
-
 
 interpretBF : Bool → Fin 2
 interpretBF false = zero
