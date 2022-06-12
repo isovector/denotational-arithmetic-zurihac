@@ -152,14 +152,27 @@ proof-mult bval true false = refl
 proof-mult bval true true = refl
 
 data Three : Set where
+  zero : Three
   one : Three
   two : Three
-  three : Three
 
 interpretThree : Three → Fin 3
-interpretThree one = zero
-interpretThree two = suc zero
-interpretThree three = suc (suc zero)
+interpretThree zero = zero
+interpretThree one = suc zero
+interpretThree two = suc (suc zero)
+
+multThree : IsMult interpretThree
+mult multThree zero zero = zero , zero
+mult multThree zero one = {! !}
+mult multThree zero two = {! !}
+mult multThree one zero = ?
+mult multThree one one = {! !}
+mult multThree one two = {! !}
+mult multThree two zero = {! !}
+mult multThree two one = {! !}
+mult multThree two two = {! !}
+zeroM multThree = zero
+proof-mult multThree = {! !}
 
 
 _ : mult (compose bvalA bval) (true , true) (true , true) ≡ ((true , false) , (false , true))
