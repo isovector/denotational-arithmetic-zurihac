@@ -144,6 +144,44 @@ interpretThree zero = zero
 interpretThree one = suc zero
 interpretThree two = suc (suc zero)
 
+addThree : IsAdd interpretThree
+add addThree (zero , zero , zero) = zero , zero
+add addThree (zero , zero , one) = one , zero
+add addThree (zero , zero , two) =  two , zero
+add addThree (zero , one , zero) = one , zero
+add addThree (zero , one , one) = two , zero
+add addThree (zero , one , two) = zero , suc zero
+add addThree (zero , two , zero) = two , zero
+add addThree (zero , two , one) = zero , suc zero
+add addThree (zero , two , two) = one , suc zero
+add addThree (suc zero , zero , zero) = one , zero
+add addThree (suc zero , one , zero) = two , zero
+add addThree (suc zero , two , zero) = zero , suc zero
+add addThree (suc zero , zero , one) = two , zero
+add addThree (suc zero , one , one) = zero , suc zero
+add addThree (suc zero , two , one) = one , suc zero
+add addThree (suc zero , zero , two) = zero , suc zero
+add addThree (suc zero , one , two) = one , suc zero
+add addThree (suc zero , two , two) = two , suc zero
+proof-add addThree (zero , zero , zero) = refl
+proof-add addThree (zero , zero , one) = refl
+proof-add addThree (zero , zero , two) = refl
+proof-add addThree (zero , one , zero) = refl
+proof-add addThree (zero , one , one) = refl
+proof-add addThree (zero , one , two) = refl
+proof-add addThree (zero , two , zero) = refl
+proof-add addThree (zero , two , one) = refl
+proof-add addThree (zero , two , two) = refl
+proof-add addThree (suc zero , zero , zero) = refl
+proof-add addThree (suc zero , one , zero) = refl
+proof-add addThree (suc zero , two , zero) = refl
+proof-add addThree (suc zero , zero , one) = refl
+proof-add addThree (suc zero , one , one) = refl
+proof-add addThree (suc zero , two , one) = refl
+proof-add addThree (suc zero , zero , two) = refl
+proof-add addThree (suc zero , one , two) = refl
+proof-add addThree (suc zero , two , two) = refl
+
 multThree : IsMult interpretThree
 mult multThree zero zero = zero , zero
 mult multThree zero one = zero , zero
@@ -168,4 +206,3 @@ proof-mult multThree two two = refl
 
 _ : mult (compose bvalA bval) (true , true) (true , true) ≡ ((true , false) , (false , true))
 _ = refl
-
