@@ -31,6 +31,10 @@ addF : {m n : ℕ} → Fin (suc m) → Fin (suc n) → Fin (suc (m + n))
 addF {m} {n} (zero {x}) y = cast (cong suc (+-comm n m)) (inject+ m y)
 addF {suc m} {n} (suc x) y = suc (addF x y)
 
+addF' : {m n : ℕ} → Fin (suc m) → Fin n → Fin (m + n)
+addF' {m} {n} (zero {x}) y = cast (+-comm n m) (inject+ m y)
+addF' {suc m} {n} (suc x) y = suc (addF' x y)
+
 im-finna-add
     : {m n : ℕ}
     → (x : Fin (suc m))
@@ -51,6 +55,12 @@ mulℕ (suc a) b = b + mulℕ a b
 mulF : {m n : ℕ} → Fin (suc m) → Fin (suc n) → Fin (suc (m * n))
 mulF zero y = zero
 mulF {suc m} {n} (suc x) y = addF y (mulF x y)
+
+mulF' : {m n : ℕ} → Fin m → Fin n → Fin (m * n)
+mulF' zero zero = zero
+mulF' zero (suc n) = zero
+mulF' (suc m) zero = zero
+mulF' {m = suc m} {suc n} (suc x) (suc y) = suc {! addF' !}
 
 
 
@@ -172,7 +182,7 @@ record IsMult {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
     zeroM : τ
     proof-mult
       : (m n : τ)
-      → digitize (P.map μ μ (mult m n)) ≡ toℕ (μ m) * toℕ (μ n)
+      → uncurry combine (P.map μ μ (mult m n)) ≡ mulF' (μ m) (μ n)
 
 open IsAdd
 open IsMult
@@ -183,11 +193,11 @@ module _ {τ : Set} {size : ℕ} {μ : τ → Fin size} where
     let (ab , cout) = add (cin , a , b)
      in add (cout , ab , c)
 
-composeMultFin : {τ : Set} → {size : ℕ} → (μ : τ → Fin size) → τ × τ → Fin (size * size)
+composeMultFin : {τ : Set} → {size : ℕ} → (τ → Fin size) → (τ × τ → Fin (size * size))
 composeMultFin μ = uncurry combine ∘ P.map μ μ
 
 compose
-    : {τ : Set} → {size : ℕ} → {μ : τ → Fin size}
+    : {τ : Set} {size : ℕ} {μ : τ → Fin size}
     → IsAdd μ
     → IsMult μ
     → IsMult {τ × τ} {size * size} (composeMultFin μ)
@@ -209,19 +219,19 @@ IsMult.mult (compose adder multipler) (a , b) (c , d) =
       -- = (kx^3 + (l + i + g)x^2 + (j + h + e)x + f
    in (proj₁ (adder .add (carry2 , k , multipler .zeroM)) , lig) , (ehj , f)
 IsMult.zeroM (compose adder multipler) = multipler .zeroM  , multipler .zeroM
-IsMult.proof-mult (compose {μ = μ} adder multipler) ab@(a , b) cd@(c , d) =
-  begin
-    digitize
-     (P.map (composeMultFin μ) (composeMultFin μ)
-      (mult (compose adder multipler) ab cd))
-  ≡⟨⟩
-    (toℕ ∘ uncurry combine)
-     (P.map (composeMultFin μ) (composeMultFin μ)
-      (mult (compose adder multipler) ab cd))
-  ≡⟨ ? ⟩
-    toℕ ((composeMultFin μ) ab) * toℕ ((composeMultFin μ) cd)
-  ∎
-  where open ≡-Reasoning
+IsMult.proof-mult (compose {μ = μ} adder multipler) ab@(a , b) cd@(c , d) = ?
+  -- begin
+  --   digitize
+  --    (P.map (composeMultFin μ) (composeMultFin μ)
+  --     (mult (compose adder multipler) ab cd))
+  -- ≡⟨⟩
+  --   (toℕ ∘ uncurry combine)
+  --    (P.map (composeMultFin μ) (composeMultFin μ)
+  --     (mult (compose adder multipler) ab cd))
+  -- ≡⟨ ? ⟩
+  --   toℕ (composeMultFin μ ab) * toℕ (composeMultFin μ cd)
+  -- ∎
+  -- where open ≡-Reasoning
 
 -- digitize : ∀ {m n} → Fin m × Fin n → ℕ
 -- digitize = toℕ ∘ uncurry combine
@@ -245,9 +255,9 @@ mult bval true false = false , false
 mult bval true true = false , true
 zeroM bval = false
 proof-mult bval false false = refl
-proof-mult bval false true = refl
-proof-mult bval true false = refl
-proof-mult bval true true = refl
+proof-mult bval false true = ?
+proof-mult bval true false = ?
+proof-mult bval true true = ?
 
 -- compose
 --   : ∀ {A B}
