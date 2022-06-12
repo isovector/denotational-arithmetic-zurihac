@@ -89,12 +89,8 @@ composeMultFin μ = uncurry combine ∘ P.map μ μ
 -- ((0 , 9) , (4 , 5))
 
 
-compose
-    : {τ : Set} {size : ℕ} {μ : τ → Fin size}
-    → IsAdd μ
-    → IsMult μ
-    → IsMult {τ × τ} {size * size} (composeMultFin μ)
-IsMult.mult (compose adder multipler) (a , b) (c , d) =
+xxx : { τ : Set } {size : ℕ } {μ : τ → Fin size } →  IsAdd μ → IsMult μ → τ × τ → τ × τ → Fin 2 × (τ × τ) × (τ × τ)
+xxx adder multipler (a , b) (c , d) =
   let (k , l) = multipler .mult a c -- x2
       (g , h) = multipler .mult a d
       (e , f) = multipler .mult b d
@@ -110,7 +106,16 @@ IsMult.mult (compose adder multipler) (a , b) (c , d) =
       -- ac = (kx + l)
       -- = (kx + l)x^2 + (ix + j)x + (gx + h)x + (ex + f))
       -- = (kx^3 + (l + i + g)x^2 + (j + h + e)x + f
-   in (proj₁ (adder .add (carry2 , k , multipler .zeroM)) , lig) , (ehj , f)
+      adderRes = adder .add (carry2 , k , multipler .zeroM)
+   in proj₂ adderRes , (proj₁ adderRes , lig) , (ehj , f)
+
+
+compose
+    : {τ : Set} {size : ℕ} {μ : τ → Fin size}
+    → IsAdd μ
+    → IsMult μ
+    → IsMult {τ × τ} {size * size} (composeMultFin μ)
+IsMult.mult (compose adder multipler) a b = proj₂ (xxx adder multipler a b)
 IsMult.zeroM (compose adder multipler) = multipler .zeroM  , multipler .zeroM
 IsMult.proof-mult (compose {μ = μ} adder multipler) ab@(a , b) cd@(c , d) = {!!}
 
@@ -146,8 +151,54 @@ proof-mult bval false true = refl
 proof-mult bval true false = refl
 proof-mult bval true true = refl
 
+zero' : Bool × Bool
+zero' = false , false
 
-_ : mult (compose bvalA bval) (true , false) (true , true)
-  ≡ ((false , true) , (true , false))
+one : Bool × Bool
+one = false , true
+
+two : Bool × Bool
+two = true , false
+
+three : Bool × Bool
+three = true , true
+
+four : Bool × Bool × Bool
+four = true , false , false
+
+five : Bool × Bool × Bool
+five = true , false , true
+
+six : (Bool × Bool) × (Bool × Bool)
+six = (false , true) , (true , false)
+
+seven : Bool × Bool × Bool
+seven = true , true , true
+
+eight : (Bool × Bool) × (Bool × Bool)
+eight = (true , false) , (false , false)
+
+nine : (Bool × Bool) × (Bool × Bool)
+nine = (true , false) , (false , true)
+
+
+_ : mult (compose bvalA bval) one one
+  ≡ (zero' , one)
 _ = refl
 
+_ : mult (compose bvalA bval) two one
+  ≡ (zero' , two)
+_ = refl
+
+_ : mult (compose bvalA bval) one three
+  ≡ (zero' , three)
+_ = refl
+
+_ : mult (compose bvalA bval) two three
+  ≡ six
+_ = refl
+
+
+_ : mult (compose bvalA bval) three three
+  ≡ nine
+_ = refl
