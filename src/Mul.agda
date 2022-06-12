@@ -167,7 +167,7 @@ add3 : ∀ {m n p} → Fin m × Fin n × Fin p → ℕ
 add3 (m , n , p) = toℕ m + toℕ n + toℕ p
 
 digitize : ∀ {m n} → Fin m × Fin n → ℕ
-digitize = toℕ ∘ uncurry combine
+digitize = toℕ ∘ uncurry combine ∘ swap
 
 record IsAdd {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
   constructor adds
@@ -199,33 +199,43 @@ module _ {τ : Set} {size : ℕ} {μ : τ → Fin size} where
 composeMultFin : {τ : Set} → {size : ℕ} → (τ → Fin size) → (τ × τ → Fin (size * size))
 composeMultFin μ = uncurry combine ∘ P.map μ μ
 
--- compose
---     : {τ : Set} {size : ℕ} {μ : τ → Fin size}
---     → IsAdd μ
---     → IsMult μ
---     → IsMult {τ × τ} {size * size} (composeMultFin μ)
--- IsMult.mult (compose adder multipler) (a , b) (c , d) =
---   let (k , l) = multipler .mult a c -- x2
---       (g , h) = multipler .mult a d
---       (e , f) = multipler .mult b d
---       (i , j) = multipler .mult b c
 
---       (ehj , carry1)  = add3Adder adder zero   e h j
---       (lig , carry2)  = add3Adder adder carry1 l i g
 
---       -- (ax + b) * (cx + d) = (acx^2 + bcx + adx + bd)
---       -- bd = (ex + f)
---       -- ad = (gx + h)
---       -- bc = (ix + j)
---       -- ac = (kx + l)
---       -- = (kx + l)x^2 + (ix + j)x + (gx + h)x + (ex + f))
---       -- = (kx^3 + (l + i + g)x^2 + (j + h + e)x + f
---    in (proj₁ (adder .add (carry2 , k , multipler .zeroM)) , lig) , (ehj , f)
--- IsMult.zeroM (compose adder multipler) = multipler .zeroM  , multipler .zeroM
--- IsMult.proof-mult (compose {μ = μ} adder multipler) ab@(a , b) cd@(c , d) = {!!}
+-- (a , b) * (c , d)
+-- (ax + b) * (cx + d)
+-- (acx^2 + adx + bcx + bd)
+-- ((0x + 6)x^2 + (0x + 3)x + (3x + 0)x + (1x + 5))
+-- (0x^3 + 6x^2 + 0x^2 + 3x + 3x^2 + 0x + 1x + 5)
+-- (0x^3 + (6 + 0 + 3)x^2 + (3 + 0 + 1)x + 5)
+-- ((0 , 9) , (4 , 5))
 
--- digitize : ∀ {m n} → Fin m × Fin n → ℕ
--- digitize = toℕ ∘ uncurry combine
+
+compose
+    : {τ : Set} {size : ℕ} {μ : τ → Fin size}
+    → IsAdd μ
+    → IsMult μ
+    → IsMult {τ × τ} {size * size} (composeMultFin μ)
+IsMult.mult (compose adder multipler) (a , b) (c , d) =
+  let (k , l) = multipler .mult a c -- x2
+      (g , h) = multipler .mult a d
+      (e , f) = multipler .mult b d
+      (i , j) = multipler .mult b c
+
+      (ehj , carry1)  = add3Adder adder zero   e h j
+      (lig , carry2)  = add3Adder adder carry1 l i g
+
+      -- (ax + b) * (cx + d) = (acx^2 + bcx + adx + bd)
+      -- bd = (ex + f)
+      -- ad = (gx + h)
+      -- bc = (ix + j)
+      -- ac = (kx + l)
+      -- = (kx + l)x^2 + (ix + j)x + (gx + h)x + (ex + f))
+      -- = (kx^3 + (l + i + g)x^2 + (j + h + e)x + f
+   in (proj₁ (adder .add (carry2 , k , multipler .zeroM)) , lig) , (ehj , f)
+IsMult.zeroM (compose adder multipler) = multipler .zeroM  , multipler .zeroM
+IsMult.proof-mult (compose {μ = μ} adder multipler) ab@(a , b) cd@(c , d) = {!!}
+
+
 
 
 -- -- 9 : Fin 10 *
@@ -238,8 +248,26 @@ composeMultFin μ = uncurry combine ∘ P.map μ μ
 
 open IsMult
 
+bvalA : IsAdd interpretBF
+add bvalA (zero , false , false) = false , zero
+add bvalA (zero , false , true) = true , zero
+add bvalA (zero , true , false) = true , zero
+add bvalA (zero , true , true) = false , suc zero
+add bvalA (suc zero , false , false) = true , zero
+add bvalA (suc zero , false , true) = false , suc zero
+add bvalA (suc zero , true , false) = false , suc zero
+add bvalA (suc zero , true , true) = true , suc zero
+proof-add bvalA (zero , false , false) = refl
+proof-add bvalA (zero , false , true) = refl
+proof-add bvalA (zero , true , false) = refl
+proof-add bvalA (zero , true , true) = refl
+proof-add bvalA (suc zero , false , false) = refl
+proof-add bvalA (suc zero , false , true) = refl
+proof-add bvalA (suc zero , true , false) = refl
+proof-add bvalA (suc zero , true , true) = refl
+
+
 bval : IsMult interpretBF
--- add bval = ?
 mult bval false false = false , false
 mult bval false true = false , false
 mult bval true false = false , false
@@ -250,6 +278,10 @@ proof-mult bval false true = refl
 proof-mult bval true false = refl
 proof-mult bval true true = refl
 
+
+_ : mult (compose bvalA bval) (true , false) (true , true)
+  ≡ ((false , true) , (true , false))
+_ = refl
 
 
 
