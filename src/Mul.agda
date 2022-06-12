@@ -163,16 +163,24 @@ interpretThree two = suc (suc zero)
 
 multThree : IsMult interpretThree
 mult multThree zero zero = zero , zero
-mult multThree zero one = {! !}
-mult multThree zero two = {! !}
-mult multThree one zero = ?
-mult multThree one one = {! !}
-mult multThree one two = {! !}
-mult multThree two zero = {! !}
-mult multThree two one = {! !}
-mult multThree two two = {! !}
+mult multThree zero one = zero , zero
+mult multThree zero two = zero , zero
+mult multThree one zero = zero , zero
+mult multThree one one = zero , one
+mult multThree one two = zero , two
+mult multThree two zero = zero , zero
+mult multThree two one = zero , two
+mult multThree two two = one , one
 zeroM multThree = zero
-proof-mult multThree = {! !}
+proof-mult multThree zero zero = refl
+proof-mult multThree zero one = refl
+proof-mult multThree zero two = refl
+proof-mult multThree one zero = refl
+proof-mult multThree one one = refl
+proof-mult multThree one two = refl
+proof-mult multThree two zero = refl
+proof-mult multThree two one = refl
+proof-mult multThree two two = refl
 
 
 _ : mult (compose bvalA bval) (true , true) (true , true) ≡ ((true , false) , (false , true))
