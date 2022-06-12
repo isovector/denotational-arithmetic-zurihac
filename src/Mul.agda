@@ -206,10 +206,13 @@ reintrepretBool : Bool -> Three
 reintrepretBool false = zero
 reintrepretBool true = one
 
-addThree : IsAdd interpretFive
-add addThree cary (inj₁ x) (inj₁ y) = inj₁ add cary x y
-add addThree cary (inj₂ x) (inj₂ y) = inj₂ add cary x y
-
+addFive : IsAdd interpretFive
+add addFive (cary , (inj₁ x) , (inj₁ y)) = P.map₁ inj₁ $ add bvalA (cary , x , y)
+add addFive (cary , (inj₂ x) , (inj₂ y)) = P.map₁ inj₂ $ add addThree (cary , x ,  y)
+add addFive (cary , (inj₁ x) , (inj₂ y)) = P.map₁ inj₂ $ add addThree (cary , reintrepretBool x ,  y)
+add addFive (cary , (inj₂ x) , (inj₁ y)) = P.map₁ inj₂ $ add addThree (cary , x ,  reintrepretBool y)
+proof-add addFive (zero , (inj₁ false) , (inj₂ zero)) = refl
+proof-add addFive (zero , (inj₂ zero) , (inj₂ zero)) = refl
 
 multThree : IsMult interpretThree
 mult multThree zero zero = zero , zero
