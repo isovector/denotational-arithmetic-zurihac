@@ -1,5 +1,6 @@
 module Mul where
 
+open import Data.Sum.Base hiding (swap)
 open import Function.Base
 open import Data.Bool.Base hiding (_<_; _≤_)
 open import Data.Nat.Base
@@ -8,6 +9,7 @@ open import Data.Product as P hiding (map)
 open import Data.Fin.Base as F hiding (_+_; _<_; _≤_)
 open import Data.Fin.Properties hiding (bounded)
 open import Relation.Binary.PropositionalEquality
+open import Data.Nat.Base as ℕ using (ℕ; zero; suc; z≤n; s≤s; z<s; s<s; _^_)
 
 addF' : {m n : ℕ} → Fin (suc m) → Fin n → Fin (m + n)
 addF' {m} {n} (zero {x}) y = cast (+-comm n m) (inject+ m y)
@@ -122,7 +124,6 @@ proof-add bvalA (suc zero , false , true) = refl
 proof-add bvalA (suc zero , true , false) = refl
 proof-add bvalA (suc zero , true , true) = refl
 
-
 bval : IsMult interpretBF
 mult bval false false = false , false
 mult bval false true = false , false
@@ -138,6 +139,8 @@ data Three : Set where
   zero : Three
   one : Three
   two : Three
+
+
 
 interpretThree : Three → Fin 3
 interpretThree zero = zero
@@ -181,6 +184,32 @@ proof-add addThree (suc zero , two , one) = refl
 proof-add addThree (suc zero , zero , two) = refl
 proof-add addThree (suc zero , one , two) = refl
 proof-add addThree (suc zero , two , two) = refl
+
+Five =  Bool ⊎ Three
+
+infixl 5 _↑ˡ_
+_↑ˡ_ : ∀ {m} → Fin m → ∀ n → Fin (m ℕ.+ n)
+zero    ↑ˡ n = zero
+(suc i) ↑ˡ n = suc (i ↑ˡ n)
+
+-- injection on the right: n ↑ʳ "i" = "n + i" in Fin (n + m)
+infixr 5 _↑ʳ_
+_↑ʳ_ : ∀ {m} n → Fin m → Fin (n ℕ.+ m)
+zero    ↑ʳ i = i
+(suc n) ↑ʳ i = suc (n ↑ʳ i)
+
+interpretFive : Five → Fin 5
+interpretFive (inj₁ x) = interpretBF x ↑ˡ 3
+interpretFive (inj₂ x) = 2 ↑ʳ interpretThree x
+
+reintrepretBool : Bool -> Three
+reintrepretBool false = zero
+reintrepretBool true = one
+
+addThree : IsAdd interpretFive
+add addThree cary (inj₁ x) (inj₁ y) = inj₁ add cary x y
+add addThree cary (inj₂ x) (inj₂ y) = inj₂ add cary x y
+
 
 multThree : IsMult interpretThree
 mult multThree zero zero = zero , zero
