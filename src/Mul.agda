@@ -56,6 +56,7 @@ record IsAdd {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
       : (mnp : Fin 2 × τ × τ)
       → digitize (P.map μ id (add mnp)) ≡ add3 (P.map id (P.map μ μ) mnp)
 
+
 record IsMult {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
   constructor multiples
   field
@@ -69,16 +70,20 @@ record IsMult {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
 open IsAdd
 open IsMult
 
+xor : Fin 2 → Fin 2 → Fin 2
+xor zero y = y
+xor y zero = y
+xor (suc x) (suc y) = zero
+
 module _ {τ : Set} {size : ℕ} {μ : τ → Fin size} where
   add3Adder : IsAdd μ → Fin 2 → τ → τ → τ → τ × Fin 2
   add3Adder (adds add _) cin a b c =
-    let (ab , cout) = add (cin , a , b)
-     in add (cout , ab , c)
+    let (ab  , cout1)  = add (cin , a , b)
+        (abc , cout2)  = add (zero , ab , c)
+     in (abc , xor cout1 cout2)
 
 composeMultFin : {τ : Set} → {size : ℕ} → (τ → Fin size) → (τ × τ → Fin (size * size))
 composeMultFin μ = uncurry combine ∘ P.map μ μ
-
-
 
 -- (a , b) * (c , d)
 -- (ax + b) * (cx + d)
@@ -147,7 +152,6 @@ proof-mult bval true false = refl
 proof-mult bval true true = refl
 
 
-_ : mult (compose bvalA bval) (true , false) (true , true)
-  ≡ ((false , true) , (true , false))
+_ : mult (compose bvalA bval) (true , true) (true , true) ≡ ((true , false) , (false , true))
 _ = refl
 
