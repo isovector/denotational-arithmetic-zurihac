@@ -206,3 +206,16 @@ proof-mult multThree two two = refl
 
 _ : mult (compose bvalA bval) (true , true) (true , true) ≡ ((true , false) , (false , true))
 _ = refl
+
+
+_ : mult (compose addThree multThree) (zero , one) (zero , one) ≡ ((zero , zero) , (zero , one))
+_ = refl
+
+
+_ : mult (compose addThree multThree) (zero , one) (one , zero) ≡ ((zero , zero) , (one , zero))
+_ = refl
+
+
+-- 4 * 4
+_ : mult (compose addThree multThree) (one , zero) (one , zero) ≡ ((zero , one) , (two , one))
+_ = {!!}
