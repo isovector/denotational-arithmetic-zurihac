@@ -4,6 +4,8 @@ open import Function.Base
 open import Data.Bool.Base hiding (_<_; _≤_)
 open import Data.Nat.Base
 open import Data.Nat.Properties
+open import Data.Vec hiding (map)
+import Data.Vec as V
 open import Data.Product as P hiding (map)
 open import Data.Fin.Base as F hiding (_+_; _<_; _≤_)
 open import Data.Fin.Properties hiding (bounded)
@@ -103,36 +105,36 @@ IsMult.proof-mult (compose {μ = μ} small adder multipler) ab@(a , b) cd@(c , d
 
 open IsMult
 
-bvalA : IsAdd interpretBF
-add bvalA (zero , false , false) = false , zero
-add bvalA (zero , false , true) = true , zero
-add bvalA (zero , true , false) = true , zero
-add bvalA (zero , true , true) = false , suc zero
-add bvalA (suc zero , false , false) = true , zero
-add bvalA (suc zero , false , true) = false , suc zero
-add bvalA (suc zero , true , false) = false , suc zero
-add bvalA (suc zero , true , true) = true , suc zero
-zeroA bvalA = false
-proof-add bvalA (zero , false , false) = refl
-proof-add bvalA (zero , false , true) = refl
-proof-add bvalA (zero , true , false) = refl
-proof-add bvalA (zero , true , true) = refl
-proof-add bvalA (suc zero , false , false) = refl
-proof-add bvalA (suc zero , false , true) = refl
-proof-add bvalA (suc zero , true , false) = refl
-proof-add bvalA (suc zero , true , true) = refl
+add2 : IsAdd interpretBF
+add add2 (zero , false , false) = false , zero
+add add2 (zero , false , true) = true , zero
+add add2 (zero , true , false) = true , zero
+add add2 (zero , true , true) = false , suc zero
+add add2 (suc zero , false , false) = true , zero
+add add2 (suc zero , false , true) = false , suc zero
+add add2 (suc zero , true , false) = false , suc zero
+add add2 (suc zero , true , true) = true , suc zero
+zeroA add2 = false
+proof-add add2 (zero , false , false) = refl
+proof-add add2 (zero , false , true) = refl
+proof-add add2 (zero , true , false) = refl
+proof-add add2 (zero , true , true) = refl
+proof-add add2 (suc zero , false , false) = refl
+proof-add add2 (suc zero , false , true) = refl
+proof-add add2 (suc zero , true , false) = refl
+proof-add add2 (suc zero , true , true) = refl
 
 
-bval : IsMult interpretBF
-mult bval false false = false , false
-mult bval false true = false , false
-mult bval true false = false , false
-mult bval true true = false , true
-zeroM bval = false
-proof-mult bval false false = refl
-proof-mult bval false true = refl
-proof-mult bval true false = refl
-proof-mult bval true true = refl
+mul2 : IsMult interpretBF
+mult mul2 false false = false , false
+mult mul2 false true = false , false
+mult mul2 true false = false , false
+mult mul2 true true = false , true
+zeroM mul2 = false
+proof-mult mul2 false false = refl
+proof-mult mul2 false true = refl
+proof-mult mul2 true false = refl
+proof-mult mul2 true true = refl
 
 data Three : Set where
   zero : Three
@@ -213,17 +215,13 @@ zeroA (bigger-adder x y) = x .zeroA , y .zeroA
 proof-add (bigger-adder {μ = μ} x y) mnp@(cin , m@(mhi , mlo) , n@(nhi , nlo))
   with y .add (cin , mlo ,  nlo)
 ... | (lo , cmid) with x .add (cmid , mhi , nhi)
-... | (hi , cout) =
-  begin
-    toℕ (combine cout (combine (μ hi) (μ lo)))
-  ≡⟨ ? ⟩
-    ?
-  ≡⟨ {! proof-add !} ⟩
-    toℕ cin + (toℕ (combine (μ mhi) (μ mlo)) + toℕ (combine (μ nhi) (μ nlo)))
-  ≡⟨ sym $ +-assoc (toℕ cin) _ _ ⟩
-    (toℕ cin + toℕ (combine (μ mhi) (μ mlo))) + toℕ (combine (μ nhi) (μ nlo))
-  ∎
-  where open ≡-Reasoning
+... | (hi , cout) = ?
+  -- begin
+  --   toℕ (combine cout (combine (μ hi) (μ lo)))
+  -- ≡⟨ ? ⟩
+  --   (toℕ cin + toℕ (combine (μ mhi) (μ mlo))) + toℕ (combine (μ nhi) (μ nlo))
+  -- ∎
+  -- where open ≡-Reasoning
 
   -- begin
   --   digitize (P.map (pairμ μ) id (add (bigger-adder x y) mnp))
@@ -238,9 +236,50 @@ proof-add (bigger-adder {μ = μ} x y) mnp@(cin , m@(mhi , mlo) , n@(nhi , nlo))
   -- ∎
   --
 
+add2x2 : IsAdd (pairμ interpretBF)
+add2x2 = bigger-adder add2 add2
 
--- _ : mult (compose bvalA bval) (true , true) (true , true) ≡ ((true , false) , (false , true))
--- _ = refl
+add2x2x2x2 : IsAdd (pairμ (pairμ interpretBF))
+add2x2x2x2 = bigger-adder add2x2 add2x2
+
+_ : IsAdd.add add2 (zero , true , false) ≡ (true , zero)
+_ = refl
+
+_ : IsAdd.add add2x2 (suc zero , (true , true) , (true , true)) ≡ ((true , true) , suc zero)
+_ = refl
+
+
+allBools : Vec Bool 2
+allBools = false ∷ true ∷ []
+
+composeTheValues : {A B : Set} {m n : ℕ} → Vec A m → Vec B n → Vec (A × B) (m * n)
+composeTheValues as bs = concat $ V.map (λ a → V.map (a ,_) bs) as
+
+allFin2s : Vec (Fin 2) 2
+allFin2s = zero ∷ suc zero ∷ []
+
+allBools2x2 : Vec (Bool × Bool) 4
+allBools2x2 = composeTheValues allBools allBools
+
+allBools2x2x2x2 : Vec ((Bool × Bool) × (Bool × Bool)) 16
+allBools2x2x2x2 = composeTheValues allBools2x2 allBools2x2
+
+mul2x2 : _
+mul2x2 = compose add2 add2x2 mul2
+
+mul2x2x2x2 : _
+mul2x2x2x2 = compose add2x2 add2x2x2x2 mul2x2
+
+_ : (V.map (toℕ ∘ pairμ (pairμ interpretBF) ∘ uncurry (mult mul2x2)) $ composeTheValues allBools2x2 allBools2x2) ≡ (0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 1 ∷ 2 ∷ 3 ∷ 0 ∷ 2 ∷ 4 ∷ 6 ∷ 0 ∷ 3 ∷ 6 ∷ 9 ∷ [])
+_ = refl
+
+
+
+_ : (V.map (toℕ ∘ pairμ (pairμ (pairμ interpretBF)) ∘ uncurry (mult mul2x2x2x2)) $ composeTheValues allBools2x2x2x2 allBools2x2x2x2) ≡ (0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 0 ∷ 1 ∷ 2 ∷ 3 ∷ 4 ∷ 5 ∷ 6 ∷ 7 ∷ 8 ∷ 9 ∷ 10 ∷ 11 ∷ 12 ∷ 13 ∷ 14 ∷ 15 ∷ 0 ∷ 2 ∷ 4 ∷ 6 ∷ 8 ∷ 10 ∷ 12 ∷ 14 ∷ 16 ∷ 18 ∷ 20 ∷ 22 ∷ 24 ∷ 26 ∷ 28 ∷ 30 ∷ 0 ∷ 3 ∷ 6 ∷ 9 ∷ 12 ∷ 15 ∷ 18 ∷ 21 ∷ 24 ∷ 27 ∷ 30 ∷ 33 ∷ 36 ∷ 39 ∷ 42 ∷ 45 ∷ 0 ∷ 4 ∷ 8 ∷ 12 ∷ 16 ∷ 20 ∷ 24 ∷ 28 ∷ 32 ∷ 36 ∷ 40 ∷ 44 ∷ 48 ∷ 52 ∷ 56 ∷ 60 ∷ 0 ∷ 5 ∷ 10 ∷ 15 ∷ 20 ∷ 25 ∷ 30 ∷ 35 ∷ 40 ∷ 45 ∷ 50 ∷ 55 ∷ 60 ∷ 65 ∷ 70 ∷ 75 ∷ 0 ∷ 6 ∷ 12 ∷ 18 ∷ 24 ∷ 30 ∷ 36 ∷ 42 ∷ 48 ∷ 54 ∷ 60 ∷ 66 ∷ 72 ∷ 78 ∷ 84 ∷ 90 ∷ 0 ∷ 7 ∷ 14 ∷ 21 ∷ 28 ∷ 35 ∷ 42 ∷ 49 ∷ 56 ∷ 63 ∷ 70 ∷ 77 ∷ 84 ∷ 91 ∷ 98 ∷ 105 ∷ 0 ∷ 8 ∷ 16 ∷ 24 ∷ 32 ∷ 40 ∷ 48 ∷ 56 ∷ 64 ∷ 72 ∷ 80 ∷ 88 ∷ 96 ∷ 104 ∷ 112 ∷ 120 ∷ 0 ∷ 9 ∷ 18 ∷ 27 ∷ 36 ∷ 45 ∷ 54 ∷ 63 ∷ 72 ∷ 81 ∷ 90 ∷ 99 ∷ 108 ∷ 117 ∷ 126 ∷ 135 ∷ 0 ∷ 10 ∷ 20 ∷ 30 ∷ 40 ∷ 50 ∷ 60 ∷ 70 ∷ 80 ∷ 90 ∷ 100 ∷ 110 ∷ 120 ∷ 130 ∷ 140 ∷ 150 ∷ 0 ∷ 11 ∷ 22 ∷ 33 ∷ 44 ∷ 55 ∷ 66 ∷ 77 ∷ 88 ∷ 99 ∷ 110 ∷ 121 ∷ 132 ∷ 143 ∷ 154 ∷ 165 ∷ 0 ∷ 12 ∷ 24 ∷ 36 ∷ 48 ∷ 60 ∷ 72 ∷ 84 ∷ 96 ∷ 108 ∷ 120 ∷ 132 ∷ 144 ∷ 156 ∷ 168 ∷ 180 ∷ 0 ∷ 13 ∷ 26 ∷ 39 ∷ 52 ∷ 65 ∷ 78 ∷ 91 ∷ 104 ∷ 117 ∷ 130 ∷ 143 ∷ 156 ∷ 169 ∷ 182 ∷ 195 ∷ 0 ∷ 14 ∷ 28 ∷ 42 ∷ 56 ∷ 70 ∷ 84 ∷ 98 ∷ 112 ∷ 126 ∷ 140 ∷ 154 ∷ 168 ∷ 182 ∷ 196 ∷ 210 ∷ 0 ∷ 15 ∷ 30 ∷ 45 ∷ 60 ∷ 75 ∷ 90 ∷ 105 ∷ 120 ∷ 135 ∷ 150 ∷ 165 ∷ 180 ∷ 195 ∷ 210 ∷ 225 ∷ [])
+_ = refl
+
+_ : mult (compose add2 add2x2 mul2) (true , true) (true , true) ≡ ((true , false) , (false , true))
+_ = refl
 
 
 -- _ : mult (compose addThree multThree) (zero , one) (zero , one) ≡ ((zero , zero) , (zero , one))
