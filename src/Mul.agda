@@ -328,6 +328,9 @@ _ : (V.map (toℕ ∘ pairμ (pairμ interpret2) ∘ uncurry (mult mul2x2)) $ co
    ∷ [])
 _ = refl
 
+_ : (V.map (toℕ ∘ pairμ (pairμ interpret2) ∘ uncurry (mult mul2x2)) $ composeTheValues allBools2x2 allBools2x2)
+  ≡ V.concat (V.tabulate {n = 4} λ a → V.tabulate {n = 4} λ b → toℕ a * toℕ b)
+_ = refl
 
 -- 4 bit multiplcation table
 _ : (V.map (toℕ ∘ pairμ (pairμ (pairμ interpret2)) ∘ uncurry (mult mul2x2x2x2)) $ composeTheValues allBools2x2x2x2 allBools2x2x2x2)
@@ -351,6 +354,11 @@ _ : (V.map (toℕ ∘ pairμ (pairμ (pairμ interpret2)) ∘ uncurry (mult mul2
 _ = refl
 
 
+_ : (V.map (toℕ ∘ pairμ (pairμ (pairμ interpret2)) ∘ uncurry (mult mul2x2x2x2)) $ composeTheValues allBools2x2x2x2 allBools2x2x2x2)
+  ≡ V.concat (V.tabulate {n = 16} λ a → V.tabulate {n = 16} λ b → toℕ a * toℕ b)
+_ = refl
+
+
 -- 2 trit multiplcation table
 _ : (V.map (toℕ ∘ pairμ (pairμ interpret3) ∘ uncurry (mult mul3x3)) $ composeTheValues allThrees3x3 allThrees3x3)
  ≡ (0 ∷ 0 ∷  0 ∷  0 ∷  0 ∷  0 ∷  0 ∷  0 ∷  0 ∷
@@ -365,3 +373,6 @@ _ : (V.map (toℕ ∘ pairμ (pairμ interpret3) ∘ uncurry (mult mul3x3)) $ co
     ∷ [])
 _ = refl
 
+_ : (V.map (toℕ ∘ pairμ (pairμ interpret3) ∘ uncurry (mult mul3x3)) $ composeTheValues allThrees3x3 allThrees3x3)
+ ≡ V.concat (V.tabulate {n = 9} λ a → V.tabulate {n = 9} λ b → toℕ a * toℕ b)
+_ = refl
