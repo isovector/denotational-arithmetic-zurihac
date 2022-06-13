@@ -35,6 +35,7 @@ record IsAdd {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
   constructor adds
   field
     add : Fin 2 × τ × τ → τ × Fin 2
+    zeroA : τ
     proof-add
       : (mnp : Fin 2 × τ × τ)
       → digitize (P.map μ id (add mnp)) ≡ add3 (P.map id (P.map μ μ) mnp)
@@ -53,20 +54,15 @@ record IsMult {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
 open IsAdd
 open IsMult
 
-xor : Fin 2 → Fin 2 → Fin 2
-xor zero y = y
-xor y zero = y
-xor (suc x) (suc y) = zero
+pairμ : {τ : Set} → {size : ℕ} → (τ → Fin size) → (τ × τ → Fin (size * size))
+pairμ μ = uncurry combine ∘ P.map μ μ
 
 module _ {τ : Set} {size : ℕ} {μ : τ → Fin size} where
-  add3Adder : IsAdd μ → Fin 2 → τ → τ → τ → τ × Fin 2
-  add3Adder (adds add _) cin a b c =
-    let (ab  , cout1)  = add (cin , a , b)
-        (abc , cout2)  = add (zero , ab , c)
-     in (abc , xor cout1 cout2)
-
-composeMultFin : {τ : Set} → {size : ℕ} → (τ → Fin size) → (τ × τ → Fin (size * size))
-composeMultFin μ = uncurry combine ∘ P.map μ μ
+  add3Adder' : IsAdd (pairμ μ) → Fin 2 → τ → τ → τ → (τ × τ)
+  add3Adder' (adds add z _) cin a b c =
+    let (ab  , cout1)  = add (cin , (proj₂ z , a) , (proj₂ z , b))
+        (abc , cout2)  = add (zero , ab , (proj₂ z , c))
+     in abc
 
 -- (a , b) * (c , d)
 -- (ax + b) * (cx + d)
@@ -80,16 +76,19 @@ composeMultFin μ = uncurry combine ∘ P.map μ μ
 compose
     : {τ : Set} {size : ℕ} {μ : τ → Fin size}
     → IsAdd μ
+    → IsAdd (pairμ μ)
     → IsMult μ
-    → IsMult {τ × τ} {size * size} (composeMultFin μ)
-IsMult.mult (compose adder multipler) (a , b) (c , d) =
-  let (k , l) = multipler .mult a c -- x2
-      (g , h) = multipler .mult a d
-      (e , f) = multipler .mult b d
-      (i , j) = multipler .mult b c
+    → IsMult {τ × τ} {size * size} (pairμ μ)
+IsMult.mult (compose {τ} {size} {μ} small adder multipler) (a , b) (c , d) =
+  let (k0 , l) = multipler .mult a c -- x2
+      (g , h)  = multipler .mult a d
+      (e , f)  = multipler .mult b d
+      (i , j)  = multipler .mult b c
 
-      (ehj , carry1)  = add3Adder adder zero   e h j
-      (lig , carry2)  = add3Adder adder carry1 l i g
+      (ehjhi , ehj)   = add3Adder' {τ = τ} {size} {μ} adder zero e h j
+      (lighi , liglo) = add3Adder' {τ = τ} {size} {μ} adder zero l i g
+      (lig , carry)   = small .add (zero  , ehjhi , liglo)
+      (k , _)         = small .add (carry , k0    , lighi)
 
       -- (ax + b) * (cx + d) = (acx^2 + bcx + adx + bd)
       -- bd = (ex + f)
@@ -98,9 +97,9 @@ IsMult.mult (compose adder multipler) (a , b) (c , d) =
       -- ac = (kx + l)
       -- = (kx + l)x^2 + (ix + j)x + (gx + h)x + (ex + f))
       -- = (kx^3 + (l + i + g)x^2 + (j + h + e)x + f
-   in (proj₁ (adder .add (carry2 , k , multipler .zeroM)) , lig) , (ehj , f)
-IsMult.zeroM (compose adder multipler) = multipler .zeroM  , multipler .zeroM
-IsMult.proof-mult (compose {μ = μ} adder multipler) ab@(a , b) cd@(c , d) = {!!}
+   in (k , lig) , (ehj , f)
+IsMult.zeroM (compose small adder multipler) = multipler .zeroM  , multipler .zeroM
+IsMult.proof-mult (compose {μ = μ} small adder multipler) ab@(a , b) cd@(c , d) = {!!}
 
 open IsMult
 
@@ -113,6 +112,7 @@ add bvalA (suc zero , false , false) = true , zero
 add bvalA (suc zero , false , true) = false , suc zero
 add bvalA (suc zero , true , false) = false , suc zero
 add bvalA (suc zero , true , true) = true , suc zero
+zeroA bvalA = false
 proof-add bvalA (zero , false , false) = refl
 proof-add bvalA (zero , false , true) = refl
 proof-add bvalA (zero , true , false) = refl
@@ -163,6 +163,7 @@ add addThree (suc zero , two , one) = one , suc zero
 add addThree (suc zero , zero , two) = zero , suc zero
 add addThree (suc zero , one , two) = one , suc zero
 add addThree (suc zero , two , two) = two , suc zero
+zeroA addThree = zero
 proof-add addThree (zero , zero , zero) = refl
 proof-add addThree (zero , zero , one) = refl
 proof-add addThree (zero , zero , two) = refl
@@ -203,19 +204,53 @@ proof-mult multThree two zero = refl
 proof-mult multThree two one = refl
 proof-mult multThree two two = refl
 
+bigger-adder : {τ : Set} {size : ℕ} {μ : τ → Fin size} → IsAdd μ → IsAdd μ → IsAdd (pairμ μ)
+add (bigger-adder x y) (cin , (mhi , mlo) , (nhi , nlo)) =
+  let (lo , cmid) = y .add (cin , mlo ,  nlo)
+      (hi , cout) = x .add (cmid , mhi , nhi)
+   in ((hi , lo) , cout)
+zeroA (bigger-adder x y) = x .zeroA , y .zeroA
+proof-add (bigger-adder {μ = μ} x y) mnp@(cin , m@(mhi , mlo) , n@(nhi , nlo))
+  with y .add (cin , mlo ,  nlo)
+... | (lo , cmid) with x .add (cmid , mhi , nhi)
+... | (hi , cout) =
+  begin
+    toℕ (combine cout (combine (μ hi) (μ lo)))
+  ≡⟨ ? ⟩
+    ?
+  ≡⟨ {! proof-add !} ⟩
+    toℕ cin + (toℕ (combine (μ mhi) (μ mlo)) + toℕ (combine (μ nhi) (μ nlo)))
+  ≡⟨ sym $ +-assoc (toℕ cin) _ _ ⟩
+    (toℕ cin + toℕ (combine (μ mhi) (μ mlo))) + toℕ (combine (μ nhi) (μ nlo))
+  ∎
+  where open ≡-Reasoning
 
-_ : mult (compose bvalA bval) (true , true) (true , true) ≡ ((true , false) , (false , true))
-_ = refl
+  -- begin
+  --   digitize (P.map (pairμ μ) id (add (bigger-adder x y) mnp))
+  -- ≡⟨⟩
+  --   (toℕ ∘ uncurry combine ∘ swap) (P.map (pairμ μ) id (add (bigger-adder x y) mnp))
+  -- ≡⟨⟩
+  --   (toℕ ∘ uncurry combine ∘ swap) (P.map (pairμ μ) id (add (bigger-adder x y) mnp))
+  -- ≡⟨ ? ⟩
+  --   toℕ cin + toℕ (pairμ μ m) + toℕ (pairμ μ n)
+  -- ≡⟨⟩
+  --   add3 (P.map id (P.map (pairμ μ) (pairμ μ)) mnp)
+  -- ∎
+  --
 
 
-_ : mult (compose addThree multThree) (zero , one) (zero , one) ≡ ((zero , zero) , (zero , one))
-_ = refl
+-- _ : mult (compose bvalA bval) (true , true) (true , true) ≡ ((true , false) , (false , true))
+-- _ = refl
 
 
-_ : mult (compose addThree multThree) (zero , one) (one , zero) ≡ ((zero , zero) , (one , zero))
-_ = refl
+-- _ : mult (compose addThree multThree) (zero , one) (zero , one) ≡ ((zero , zero) , (zero , one))
+-- _ = refl
 
 
--- 4 * 4
-_ : mult (compose addThree multThree) (one , zero) (one , zero) ≡ ((zero , one) , (two , one))
-_ = {!!}
+-- _ : mult (compose addThree multThree) (zero , one) (one , zero) ≡ ((zero , zero) , (one , zero))
+-- _ = refl
+
+
+-- -- 4 * 4
+-- _ : mult (compose addThree multThree) (one , zero) (one , zero) ≡ ((zero , one) , (two , one))
+-- _ = {!!}
