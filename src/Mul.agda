@@ -11,13 +11,11 @@ open import Data.Fin.Base as F hiding (_+_; _<_; _≤_)
 open import Data.Fin.Properties hiding (bounded)
 open import Relation.Binary.PropositionalEquality
 
+--------------------------------------------------------------------------------
+
 addF' : {m n : ℕ} → Fin (suc m) → Fin n → Fin (m + n)
 addF' {m} {n} (zero {x}) y = cast (+-comm n m) (inject+ m y)
 addF' {suc m} {n} (suc x) y = suc (addF' x y)
-
-toℕ-addF' : ∀ {m n} (x : Fin (suc m)) (y : Fin n) → toℕ (addF' x y) ≡ toℕ x + toℕ y
-toℕ-addF' {m}            zero    y = trans (toℕ-cast _ (inject+ m y)) (sym $ toℕ-inject+ m y)
-toℕ-addF' {m = suc m} (suc x) y = cong suc (toℕ-addF' x y)
 
 mulF' : {m n : ℕ} → Fin m → Fin n → Fin (m * n)
 mulF' zero zero = zero
@@ -25,14 +23,16 @@ mulF' zero (suc n) = zero
 mulF' (suc m) zero = zero
 mulF' {m = suc m} {suc n} (suc x) (suc y) = inject₁ (addF' (suc y) (mulF' x (suc y)))
 
-interpretBF : Bool → Fin 2
-interpretBF false = zero
-interpretBF true = suc zero
+--------------------------------------------------------------------------------
 
+toℕ-addF' : ∀ {m n} (x : Fin (suc m)) (y : Fin n) → toℕ (addF' x y) ≡ toℕ x + toℕ y
+toℕ-addF' {m}            zero    y = trans (toℕ-cast _ (inject+ m y)) (sym $ toℕ-inject+ m y)
+toℕ-addF' {m = suc m} (suc x) y = cong suc (toℕ-addF' x y)
 
+addF'3 : ∀ {n p} → Fin 2 × Fin n × Fin p → Fin (n + p)
+addF'3 (m , n , p) = addF' (addF' m n) p
 
-add3 : ∀ {n p} → Fin 2 × Fin n × Fin p → Fin (n + p)
-add3 (m , n , p) = addF' (addF' m n) p
+--------------------------------------------------------------------------------
 
 digitize : ∀ {m} → Fin m × Fin 2 → Fin (m + m)
 digitize {m} = cast (trans (sym $ +-assoc m m 0)(+-comm (m + m) 0)) ∘ uncurry combine ∘ swap
@@ -45,8 +45,10 @@ record IsAdd {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
     zeroA : τ
     proof-add
       : (mnp : Fin 2 × τ × τ)
-      → toℕ (digitize (P.map μ id (add mnp))) ≡ toℕ (add3 (P.map id (P.map μ μ) mnp))
+      → toℕ (digitize (P.map μ id (add mnp))) ≡ toℕ (addF'3 (P.map id (P.map μ μ) mnp))
+open IsAdd
 
+--------------------------------------------------------------------------------
 
 record IsMult {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
   constructor multiples
@@ -55,11 +57,11 @@ record IsMult {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
     zeroM : τ
     proof-mult
       : (m n : τ)
-      → uncurry combine (P.map μ μ (mult m n))  -- 1
-      ≡ mulF' (μ m) (μ n)  -- 2
-
-open IsAdd
+      → uncurry combine (P.map μ μ (mult m n))
+      ≡ mulF' (μ m) (μ n)
 open IsMult
+
+--------------------------------------------------------------------------------
 
 pairμ : {τ : Set} → {size : ℕ} → (τ → Fin size) → (τ × τ → Fin (size * size))
 pairμ μ = uncurry combine ∘ P.map μ μ
@@ -108,7 +110,11 @@ IsMult.mult (compose {τ} {size} {μ} small adder multipler) (a , b) (c , d) =
 IsMult.zeroM (compose small adder multipler) = multipler .zeroM  , multipler .zeroM
 IsMult.proof-mult (compose {μ = μ} small adder multipler) ab@(a , b) cd@(c , d) = {!!}
 
-add2 : IsAdd interpretBF
+interpret2 : Bool → Fin 2
+interpret2 false = zero
+interpret2 true = suc zero
+
+add2 : IsAdd interpret2
 add add2 (zero , false , false) = false , zero
 add add2 (zero , false , true) = true , zero
 add add2 (zero , true , false) = true , zero
@@ -128,7 +134,7 @@ proof-add add2 (suc zero , true , false) = refl
 proof-add add2 (suc zero , true , true) = refl
 
 
-mul2 : IsMult interpretBF
+mul2 : IsMult interpret2
 mult mul2 false false = false , false
 mult mul2 false true = false , false
 mult mul2 true false = false , false
@@ -144,70 +150,70 @@ data Three : Set where
   one : Three
   two : Three
 
-interpretThree : Three → Fin 3
-interpretThree zero = zero
-interpretThree one = suc zero
-interpretThree two = suc (suc zero)
+interpret3 : Three → Fin 3
+interpret3 zero = zero
+interpret3 one = suc zero
+interpret3 two = suc (suc zero)
 
-addThree : IsAdd interpretThree
-add addThree (zero , zero , zero) = zero , zero
-add addThree (zero , zero , one) = one , zero
-add addThree (zero , zero , two) =  two , zero
-add addThree (zero , one , zero) = one , zero
-add addThree (zero , one , one) = two , zero
-add addThree (zero , one , two) = zero , suc zero
-add addThree (zero , two , zero) = two , zero
-add addThree (zero , two , one) = zero , suc zero
-add addThree (zero , two , two) = one , suc zero
-add addThree (suc zero , zero , zero) = one , zero
-add addThree (suc zero , one , zero) = two , zero
-add addThree (suc zero , two , zero) = zero , suc zero
-add addThree (suc zero , zero , one) = two , zero
-add addThree (suc zero , one , one) = zero , suc zero
-add addThree (suc zero , two , one) = one , suc zero
-add addThree (suc zero , zero , two) = zero , suc zero
-add addThree (suc zero , one , two) = one , suc zero
-add addThree (suc zero , two , two) = two , suc zero
-zeroA addThree = zero
-proof-add addThree (zero , zero , zero) = refl
-proof-add addThree (zero , zero , one) = refl
-proof-add addThree (zero , zero , two) = refl
-proof-add addThree (zero , one , zero) = refl
-proof-add addThree (zero , one , one) = refl
-proof-add addThree (zero , one , two) = refl
-proof-add addThree (zero , two , zero) = refl
-proof-add addThree (zero , two , one) = refl
-proof-add addThree (zero , two , two) = refl
-proof-add addThree (suc zero , zero , zero) = refl
-proof-add addThree (suc zero , one , zero) = refl
-proof-add addThree (suc zero , two , zero) = refl
-proof-add addThree (suc zero , zero , one) = refl
-proof-add addThree (suc zero , one , one) = refl
-proof-add addThree (suc zero , two , one) = refl
-proof-add addThree (suc zero , zero , two) = refl
-proof-add addThree (suc zero , one , two) = refl
-proof-add addThree (suc zero , two , two) = refl
+add3 : IsAdd interpret3
+add add3 (zero , zero , zero) = zero , zero
+add add3 (zero , zero , one) = one , zero
+add add3 (zero , zero , two) =  two , zero
+add add3 (zero , one , zero) = one , zero
+add add3 (zero , one , one) = two , zero
+add add3 (zero , one , two) = zero , suc zero
+add add3 (zero , two , zero) = two , zero
+add add3 (zero , two , one) = zero , suc zero
+add add3 (zero , two , two) = one , suc zero
+add add3 (suc zero , zero , zero) = one , zero
+add add3 (suc zero , one , zero) = two , zero
+add add3 (suc zero , two , zero) = zero , suc zero
+add add3 (suc zero , zero , one) = two , zero
+add add3 (suc zero , one , one) = zero , suc zero
+add add3 (suc zero , two , one) = one , suc zero
+add add3 (suc zero , zero , two) = zero , suc zero
+add add3 (suc zero , one , two) = one , suc zero
+add add3 (suc zero , two , two) = two , suc zero
+zeroA add3 = zero
+proof-add add3 (zero , zero , zero) = refl
+proof-add add3 (zero , zero , one) = refl
+proof-add add3 (zero , zero , two) = refl
+proof-add add3 (zero , one , zero) = refl
+proof-add add3 (zero , one , one) = refl
+proof-add add3 (zero , one , two) = refl
+proof-add add3 (zero , two , zero) = refl
+proof-add add3 (zero , two , one) = refl
+proof-add add3 (zero , two , two) = refl
+proof-add add3 (suc zero , zero , zero) = refl
+proof-add add3 (suc zero , one , zero) = refl
+proof-add add3 (suc zero , two , zero) = refl
+proof-add add3 (suc zero , zero , one) = refl
+proof-add add3 (suc zero , one , one) = refl
+proof-add add3 (suc zero , two , one) = refl
+proof-add add3 (suc zero , zero , two) = refl
+proof-add add3 (suc zero , one , two) = refl
+proof-add add3 (suc zero , two , two) = refl
 
-multThree : IsMult interpretThree
-mult multThree zero zero = zero , zero
-mult multThree zero one = zero , zero
-mult multThree zero two = zero , zero
-mult multThree one zero = zero , zero
-mult multThree one one = zero , one
-mult multThree one two = zero , two
-mult multThree two zero = zero , zero
-mult multThree two one = zero , two
-mult multThree two two = one , one
-zeroM multThree = zero
-proof-mult multThree zero zero = refl
-proof-mult multThree zero one = refl
-proof-mult multThree zero two = refl
-proof-mult multThree one zero = refl
-proof-mult multThree one one = refl
-proof-mult multThree one two = refl
-proof-mult multThree two zero = refl
-proof-mult multThree two one = refl
-proof-mult multThree two two = refl
+mul3 : IsMult interpret3
+mult mul3 zero zero = zero , zero
+mult mul3 zero one = zero , zero
+mult mul3 zero two = zero , zero
+mult mul3 one zero = zero , zero
+mult mul3 one one = zero , one
+mult mul3 one two = zero , two
+mult mul3 two zero = zero , zero
+mult mul3 two one = zero , two
+mult mul3 two two = one , one
+zeroM mul3 = zero
+proof-mult mul3 zero zero = refl
+proof-mult mul3 zero one = refl
+proof-mult mul3 zero two = refl
+proof-mult mul3 one zero = refl
+proof-mult mul3 one one = refl
+proof-mult mul3 one two = refl
+proof-mult mul3 two zero = refl
+proof-mult mul3 two one = refl
+proof-mult mul3 two two = refl
 
 postulate toℕ-combine : ∀ {m n} (i : Fin m) (j : Fin n) → toℕ (combine i j) ≡ n * toℕ i + toℕ j
 
@@ -253,23 +259,32 @@ proof-add (bigger-adder {size = size} {μ = μ}  x y) mnp@(cin , m@(mhi , mlo) ,
     toℕ (addF' (addF' cin (μ mlo)) (μ nlo)) + size * (toℕ (μ mhi) + toℕ (μ nhi))                                     ≡⟨ cong (\ φ → φ + size * (toℕ (μ mhi) + toℕ (μ nhi))) $ toℕ-addF' (addF' cin (μ mlo)) (μ nlo) ⟩
     toℕ (addF' cin (μ mlo)) + toℕ (μ nlo) + size * (toℕ (μ mhi) + toℕ (μ nhi))                                       ≡⟨ cong (\ φ → φ + toℕ (μ nlo) + size * (toℕ (μ mhi) + toℕ (μ nhi))) $ toℕ-addF' cin (μ mlo) ⟩
     toℕ cin + toℕ (μ mlo) + toℕ (μ nlo) + size * (toℕ (μ mhi) + toℕ (μ nhi))                                         ≡⟨⟩
-
-    ((toℕ cin + toℕ (μ mlo)) + toℕ (μ nlo)) + size * (toℕ (μ mhi) + toℕ (μ nhi))
-  ≡⟨ {! taneb !} ⟩
-    toℕ cin + (size * toℕ (μ mhi) + toℕ (μ mlo)) + (size * toℕ (μ nhi) + toℕ (μ nlo))
-
-  ≡⟨ (sym $ cong (λ φ → toℕ cin + φ + (size * toℕ (μ nhi) + toℕ (μ nlo))) (toℕ-combine (μ mhi) (μ mlo))) ⟩
+    ((toℕ cin + toℕ (μ mlo)) + toℕ (μ nlo)) + size * (toℕ (μ mhi) + toℕ (μ nhi))                                     ≡⟨ cong₂ _+_ (+-assoc (toℕ cin) (toℕ (μ mlo)) (toℕ (μ nlo))) (*-distribˡ-+ size (toℕ (μ mhi)) (toℕ (μ nhi))) ⟩
+    (toℕ cin + (toℕ (μ mlo) + toℕ (μ nlo))) + (size * toℕ (μ mhi) + size * toℕ (μ nhi))                              ≡˘⟨ +-assoc (toℕ cin + (toℕ (μ mlo) + toℕ (μ nlo))) (size * toℕ (μ mhi)) (size * toℕ (μ nhi)) ⟩
+    ((toℕ cin + (toℕ (μ mlo) + toℕ (μ nlo))) + size * toℕ (μ mhi)) + size * toℕ (μ nhi)                              ≡⟨ cong (_+ size * toℕ (μ nhi)) (+-assoc (toℕ cin) (toℕ (μ mlo) + toℕ (μ nlo)) (size * toℕ (μ mhi))) ⟩
+    (toℕ cin + ((toℕ (μ mlo) + toℕ (μ nlo)) + size * toℕ (μ mhi))) + size * toℕ (μ nhi)                              ≡⟨ cong (λ z → toℕ cin + z + size * toℕ (μ nhi)) (+-assoc (toℕ (μ mlo)) (toℕ (μ nlo)) (size * toℕ (μ mhi))) ⟩
+    (toℕ cin + (toℕ (μ mlo) + (toℕ (μ nlo) + size * toℕ (μ mhi)))) + size * toℕ (μ nhi)                              ≡⟨ cong (λ z → toℕ cin + (toℕ (μ mlo) + z) + size * toℕ (μ nhi)) (+-comm (toℕ (μ nlo)) (size * toℕ (μ mhi))) ⟩
+    (toℕ cin + (toℕ (μ mlo) + (size * toℕ (μ mhi) + toℕ (μ nlo)))) + size * toℕ (μ nhi)                              ≡˘⟨ cong (λ z → toℕ cin + z + size * toℕ (μ nhi)) (+-assoc (toℕ (μ mlo)) (size * toℕ (μ mhi)) (toℕ (μ nlo))) ⟩
+    (toℕ cin + ((toℕ (μ mlo) + size * toℕ (μ mhi)) + toℕ (μ nlo))) + size * toℕ (μ nhi)                              ≡˘⟨ cong (_+ size * toℕ (μ nhi)) (+-assoc (toℕ cin) (toℕ (μ mlo) + size * toℕ (μ mhi)) (toℕ (μ nlo))) ⟩
+    ((toℕ cin + (toℕ (μ mlo) + size * toℕ (μ mhi))) + toℕ (μ nlo)) + size * toℕ (μ nhi)                              ≡⟨ +-assoc (toℕ cin + (toℕ (μ mlo) + size * toℕ (μ mhi))) (toℕ (μ nlo)) (size * toℕ (μ nhi)) ⟩
+    (toℕ cin + (toℕ (μ mlo) + size * toℕ (μ mhi))) + (toℕ (μ nlo) + size * toℕ (μ nhi))                              ≡⟨ cong₂ (λ ϕ ψ → toℕ cin + ϕ + ψ) (+-comm (toℕ (μ mlo)) (size * toℕ (μ mhi))) (+-comm (toℕ (μ nlo)) (size * toℕ (μ nhi))) ⟩
+    toℕ cin + (size * toℕ (μ mhi) + toℕ (μ mlo)) + (size * toℕ (μ nhi) + toℕ (μ nlo))                                ≡⟨ (sym $ cong (λ φ → toℕ cin + φ + (size * toℕ (μ nhi) + toℕ (μ nlo))) (toℕ-combine (μ mhi) (μ mlo))) ⟩
     toℕ cin + toℕ (combine (μ mhi) (μ mlo)) + (size * toℕ (μ nhi) + toℕ (μ nlo))                                     ≡⟨ (sym $ cong₂ _+_ (toℕ-addF' cin (combine (μ mhi) (μ mlo))) (toℕ-combine (μ nhi) (μ nlo)))  ⟩
     toℕ (addF' cin (combine (μ mhi) (μ mlo))) + toℕ (combine (μ nhi) (μ nlo))                                        ≡⟨ sym $ toℕ-addF' (addF' cin (combine (μ mhi) (μ mlo))) (combine (μ nhi) (μ nlo)) ⟩
     toℕ (addF' (addF' cin (combine (μ mhi) (μ mlo))) (combine (μ nhi) (μ nlo)))
   ∎
   where open ≡-Reasoning
 
+add3x3 : IsAdd (pairμ interpret3)
+add3x3 = bigger-adder add3 add3
 
-add2x2 : IsAdd (pairμ interpretBF)
+mul3x3 : IsMult (pairμ interpret3)
+mul3x3 = compose add3 add3x3 mul3
+
+add2x2 : IsAdd (pairμ interpret2)
 add2x2 = bigger-adder add2 add2
 
-add2x2x2x2 : IsAdd (pairμ (pairμ interpretBF))
+add2x2x2x2 : IsAdd (pairμ (pairμ interpret2))
 add2x2x2x2 = bigger-adder add2x2 add2x2
 
 _ : IsAdd.add add2 (zero , true , false) ≡ (true , zero)
@@ -279,14 +294,18 @@ _ : IsAdd.add add2x2 (suc zero , (true , true) , (true , true)) ≡ ((true , tru
 _ = refl
 
 
+allThrees : Vec Three 3
+allThrees = zero ∷ one ∷ two ∷ []
+
 allBools : Vec Bool 2
 allBools = false ∷ true ∷ []
 
 composeTheValues : {A B : Set} {m n : ℕ} → Vec A m → Vec B n → Vec (A × B) (m * n)
 composeTheValues as bs = concat $ V.map (λ a → V.map (a ,_) bs) as
 
-allFin2s : Vec (Fin 2) 2
-allFin2s = zero ∷ suc zero ∷ []
+allThrees3x3 : Vec (Three × Three) 9
+allThrees3x3 = composeTheValues allThrees allThrees
+
 
 allBools2x2 : Vec (Bool × Bool) 4
 allBools2x2 = composeTheValues allBools allBools
@@ -300,7 +319,8 @@ mul2x2 = compose add2 add2x2 mul2
 mul2x2x2x2 : _
 mul2x2x2x2 = compose add2x2 add2x2x2x2 mul2x2
 
-_ : (V.map (toℕ ∘ pairμ (pairμ interpretBF) ∘ uncurry (mult mul2x2)) $ composeTheValues allBools2x2 allBools2x2)
+-- 2 bit multiplcation table
+_ : (V.map (toℕ ∘ pairμ (pairμ interpret2) ∘ uncurry (mult mul2x2)) $ composeTheValues allBools2x2 allBools2x2)
   ≡ (0 ∷ 0 ∷ 0 ∷ 0
    ∷ 0 ∷ 1 ∷ 2 ∷ 3
    ∷ 0 ∷ 2 ∷ 4 ∷ 6
@@ -309,7 +329,8 @@ _ : (V.map (toℕ ∘ pairμ (pairμ interpretBF) ∘ uncurry (mult mul2x2)) $ c
 _ = refl
 
 
-_ : (V.map (toℕ ∘ pairμ (pairμ (pairμ interpretBF)) ∘ uncurry (mult mul2x2x2x2)) $ composeTheValues allBools2x2x2x2 allBools2x2x2x2)
+-- 4 bit multiplcation table
+_ : (V.map (toℕ ∘ pairμ (pairμ (pairμ interpret2)) ∘ uncurry (mult mul2x2x2x2)) $ composeTheValues allBools2x2x2x2 allBools2x2x2x2)
   ≡ (0 ∷  0 ∷  0 ∷  0 ∷  0 ∷ 0  ∷ 0  ∷   0 ∷   0 ∷   0 ∷   0 ∷   0 ∷   0 ∷   0 ∷   0 ∷   0
    ∷ 0 ∷  1 ∷  2 ∷  3 ∷  4 ∷ 5  ∷ 6  ∷   7 ∷   8 ∷   9 ∷  10 ∷  11 ∷  12 ∷  13 ∷  14 ∷  15
    ∷ 0 ∷  2 ∷  4 ∷  6 ∷  8 ∷ 10 ∷ 12 ∷  14 ∷  16 ∷  18 ∷  20 ∷  22 ∷  24 ∷  26 ∷  28 ∷  30
@@ -329,18 +350,18 @@ _ : (V.map (toℕ ∘ pairμ (pairμ (pairμ interpretBF)) ∘ uncurry (mult mul
    ∷ [])
 _ = refl
 
-_ : mult (compose add2 add2x2 mul2) (true , true) (true , true) ≡ ((true , false) , (false , true))
+
+-- 2 trit multiplcation table
+_ : (V.map (toℕ ∘ pairμ (pairμ interpret3) ∘ uncurry (mult mul3x3)) $ composeTheValues allThrees3x3 allThrees3x3)
+ ≡ (0 ∷ 0 ∷  0 ∷  0 ∷  0 ∷  0 ∷  0 ∷  0 ∷  0 ∷
+    0 ∷ 1 ∷  2 ∷  3 ∷  4 ∷  5 ∷  6 ∷  7 ∷  8 ∷
+    0 ∷ 2 ∷  4 ∷  6 ∷  8 ∷ 10 ∷ 12 ∷ 14 ∷ 16 ∷
+    0 ∷ 3 ∷  6 ∷  9 ∷ 12 ∷ 15 ∷ 18 ∷ 21 ∷ 24 ∷
+    0 ∷ 4 ∷  8 ∷ 12 ∷ 16 ∷ 20 ∷ 24 ∷ 28 ∷ 32 ∷
+    0 ∷ 5 ∷ 10 ∷ 15 ∷ 20 ∷ 25 ∷ 30 ∷ 35 ∷ 40 ∷
+    0 ∷ 6 ∷ 12 ∷ 18 ∷ 24 ∷ 30 ∷ 36 ∷ 42 ∷ 48 ∷
+    0 ∷ 7 ∷ 14 ∷ 21 ∷ 28 ∷ 35 ∷ 42 ∷ 49 ∷ 56 ∷
+    0 ∷ 8 ∷ 16 ∷ 24 ∷ 32 ∷ 40 ∷ 48 ∷ 56 ∷ 64
+    ∷ [])
 _ = refl
 
-
--- _ : mult (compose addThree multThree) (zero , one) (zero , one) ≡ ((zero , zero) , (zero , one))
--- _ = refl
-
-
--- _ : mult (compose addThree multThree) (zero , one) (one , zero) ≡ ((zero , zero) , (one , zero))
--- _ = refl
-
-
--- -- 4 * 4
--- _ : mult (compose addThree multThree) (one , zero) (one , zero) ≡ ((zero , one) , (two , one))
--- _ = {!!}
