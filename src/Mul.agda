@@ -294,25 +294,27 @@ mul3x3 = compose add3 add3x3 mul3
 
 --------------------------------------------------------------------------------
 
-allBools : Vec Bool 2
-allBools = false ∷ true ∷ []
-
-allThrees : Vec Three 3
-allThrees = zero ∷ one ∷ two ∷ []
-
 composeTheValues : {A B : Set} {m n : ℕ} → Vec A m → Vec B n → Vec (A × B) (m * n)
 composeTheValues as bs = concat $ V.map (λ a → V.map (a ,_) bs) as
 
 --------------------------------------------------------------------------------
 
+allBools : Vec Bool 2
+allBools = false ∷ true ∷ []
+
 allBools2x2 : Vec (Bool × Bool) 4
 allBools2x2 = composeTheValues allBools allBools
 
-allThrees3x3 : Vec (Three × Three) 9
-allThrees3x3 = composeTheValues allThrees allThrees
-
 allBools2x2x2x2 : Vec ((Bool × Bool) × (Bool × Bool)) 16
 allBools2x2x2x2 = composeTheValues allBools2x2 allBools2x2
+
+--------------------------------------------------------------------------------
+
+allThrees : Vec Three 3
+allThrees = zero ∷ one ∷ two ∷ []
+
+allThrees3x3 : Vec (Three × Three) 9
+allThrees3x3 = composeTheValues allThrees allThrees
 
 --------------------------------------------------------------------------------
 
