@@ -15,6 +15,10 @@ addF' : {m n : ℕ} → Fin (suc m) → Fin n → Fin (m + n)
 addF' {m} {n} (zero {x}) y = cast (+-comm n m) (inject+ m y)
 addF' {suc m} {n} (suc x) y = suc (addF' x y)
 
+toℕ-addF' : ∀ {m n} (x : Fin (suc m)) (y : Fin n) → toℕ (addF' x y) ≡ toℕ x + toℕ y
+toℕ-addF' {m}            zero    y = trans (toℕ-cast _ (inject+ m y)) (sym $ toℕ-inject+ m y)
+toℕ-addF' {m = suc m} (suc x) y = cong suc (toℕ-addF' x y)
+
 mulF' : {m n : ℕ} → Fin m → Fin n → Fin (m * n)
 mulF' zero zero = zero
 mulF' zero (suc n) = zero
@@ -41,7 +45,7 @@ record IsAdd {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
     zeroA : τ
     proof-add
       : (mnp : Fin 2 × τ × τ)
-      → digitize (P.map μ id (add mnp)) ≡ add3 (P.map id (P.map μ μ) mnp)
+      → toℕ (digitize (P.map μ id (add mnp))) ≡ toℕ (add3 (P.map id (P.map μ μ) mnp))
 
 
 record IsMult {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
@@ -205,23 +209,54 @@ proof-mult multThree two zero = refl
 proof-mult multThree two one = refl
 proof-mult multThree two two = refl
 
+postulate toℕ-combine : ∀ {m n} (i : Fin m) (j : Fin n) → toℕ (combine i j) ≡ n * toℕ i + toℕ j
+
 bigger-adder : {τ : Set} {size : ℕ} {μ : τ → Fin size} → IsAdd μ → IsAdd μ → IsAdd (pairμ μ)
 add (bigger-adder x y) (cin , (mhi , mlo) , (nhi , nlo)) =
   let (lo , cmid) = y .add (cin , mlo ,  nlo)
       (hi , cout) = x .add (cmid , mhi , nhi)
    in ((hi , lo) , cout)
 zeroA (bigger-adder x y) = x .zeroA , y .zeroA
-proof-add (bigger-adder {μ = μ} x y) mnp@(cin , m@(mhi , mlo) , n@(nhi , nlo))
-  with y .add (cin , mlo ,  nlo)
-... | (lo , cmid) with x .add (cmid , mhi , nhi)
-... | (hi , cout) = let x-proof = proof-add x
-                        y-proof = proof-add y in
+proof-add (bigger-adder {size = size} {μ = μ}  x y) mnp@(cin , m@(mhi , mlo) , n@(nhi , nlo))
+  with y .add (cin , mlo , nlo) in y-eq
+... | (lo , cmid) with x .add (cmid , mhi , nhi) in x-eq
+... | (hi , cout) = let x-proof = proof-add x (cmid , mhi , nhi)
+                        y-proof = proof-add y (cin , mlo , nlo) in
   begin
-    cast _ (combine cout (combine (μ hi) (μ lo)))
-  ≡⟨ ? ⟩
-    addF' (addF' cin (combine (μ mhi) (μ mlo))) (combine (μ nhi) (μ nlo))
+    toℕ (cast _ (combine cout (combine (μ hi) (μ lo))))
+  ≡⟨ toℕ-cast _ (combine cout (combine (μ hi) (μ lo))) ⟩
+    toℕ (combine cout (combine (μ hi) (μ lo)))
+  ≡⟨ toℕ-combine cout _ ⟩
+    size * size * toℕ cout + toℕ (combine (μ hi) (μ lo))
+  ≡⟨ cong (\ φ → size * size * toℕ cout + φ) (toℕ-combine (μ hi) (μ lo)) ⟩
+    size * size * toℕ cout + (size * toℕ (μ hi) + toℕ (μ lo))
+  ≡˘⟨ +-assoc (size * size * toℕ cout) (size * toℕ (μ hi)) (toℕ (μ lo)) ⟩
+    size * size * toℕ cout + size * toℕ (μ hi) + toℕ (μ lo)
+  ≡⟨ cong (λ z → z + size * toℕ (μ hi) + toℕ (μ lo)) (*-assoc size size (toℕ cout)) ⟩
+    size * (size * toℕ cout) + size * toℕ (μ hi) + toℕ (μ lo)
+  ≡˘⟨ cong (_+ toℕ (μ lo)) (*-distribˡ-+ size (size * toℕ cout) (toℕ (μ hi))) ⟩
+    size * (size * toℕ cout + toℕ (μ hi)) + toℕ (μ lo)
+  ≡⟨ cong (\ φ → size * φ + toℕ (μ lo)) $ sym $ toℕ-combine cout (μ hi) ⟩
+    size * toℕ (combine cout (μ hi)) + toℕ (μ lo)
+  ≡⟨ sym $ toℕ-combine (combine cout (μ hi)) (μ lo) ⟩
+    toℕ (combine (combine cout (μ hi)) (μ lo))
+  ≡⟨⟩
+    toℕ (combine (uncurry combine (P.map₂ μ (cout , hi))) (μ lo))
+  ≡⟨⟩
+    toℕ (combine (uncurry combine (P.map₂ μ (swap (hi , cout)))) (μ lo))
+  ≡⟨ cong (\ φ → toℕ (combine (uncurry combine (P.map₂ μ (swap φ))) (μ lo))) $ sym $ x-eq ⟩
+    toℕ (combine (uncurry combine (P.map₂ μ (swap (x .add (cmid , mhi , nhi) )))) (μ lo))
+  ≡⟨ {! x .proof-add !} ⟩
+    toℕ cin + (size * toℕ (μ mhi) + toℕ (μ mlo)) + (size * toℕ (μ nhi) + toℕ (μ nlo))
+  ≡⟨ (sym $ cong (λ φ → toℕ cin + φ + (size * toℕ (μ nhi) + toℕ (μ nlo))) (toℕ-combine (μ mhi) (μ mlo))) ⟩
+    toℕ cin + toℕ (combine (μ mhi) (μ mlo)) + (size * toℕ (μ nhi) + toℕ (μ nlo))
+  ≡⟨ (sym $ cong₂ _+_ (toℕ-addF' cin (combine (μ mhi) (μ mlo))) (toℕ-combine (μ nhi) (μ nlo)))  ⟩
+    toℕ (addF' cin (combine (μ mhi) (μ mlo))) + toℕ (combine (μ nhi) (μ nlo))
+  ≡⟨ sym $ toℕ-addF' (addF' cin (combine (μ mhi) (μ mlo))) (combine (μ nhi) (μ nlo)) ⟩
+    toℕ (addF' (addF' cin (combine (μ mhi) (μ mlo))) (combine (μ nhi) (μ nlo)))
   ∎
   where open ≡-Reasoning
+
 
 --  -- begin
 --  --   digitize (P.map (pairμ μ) id (add (bigger-adder x y) mnp))
