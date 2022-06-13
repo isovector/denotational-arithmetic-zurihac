@@ -27,11 +27,12 @@ interpretBF true = suc zero
 
 
 
-add3 : ∀ {m n p} → Fin m × Fin n × Fin p → ℕ
-add3 (m , n , p) = toℕ m + toℕ n + toℕ p
+add3 : ∀ {n p} → Fin 2 × Fin n × Fin p → Fin (n + p)
+add3 (m , n , p) = addF' (addF' m n) p
 
-digitize : ∀ {m n} → Fin m × Fin n → ℕ
-digitize = toℕ ∘ uncurry combine ∘ swap
+digitize : ∀ {m} → Fin m × Fin 2 → Fin (m + m)
+digitize {m} = cast (trans (sym $ +-assoc m m 0)(+-comm (m + m) 0)) ∘ uncurry combine ∘ swap
+
 
 record IsAdd {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
   constructor adds
@@ -102,8 +103,6 @@ IsMult.mult (compose {τ} {size} {μ} small adder multipler) (a , b) (c , d) =
    in (k , lig) , (ehj , f)
 IsMult.zeroM (compose small adder multipler) = multipler .zeroM  , multipler .zeroM
 IsMult.proof-mult (compose {μ = μ} small adder multipler) ab@(a , b) cd@(c , d) = {!!}
-
-open IsMult
 
 add2 : IsAdd interpretBF
 add add2 (zero , false , false) = false , zero
@@ -215,26 +214,27 @@ zeroA (bigger-adder x y) = x .zeroA , y .zeroA
 proof-add (bigger-adder {μ = μ} x y) mnp@(cin , m@(mhi , mlo) , n@(nhi , nlo))
   with y .add (cin , mlo ,  nlo)
 ... | (lo , cmid) with x .add (cmid , mhi , nhi)
-... | (hi , cout) = ?
-  -- begin
-  --   toℕ (combine cout (combine (μ hi) (μ lo)))
-  -- ≡⟨ ? ⟩
-  --   (toℕ cin + toℕ (combine (μ mhi) (μ mlo))) + toℕ (combine (μ nhi) (μ nlo))
-  -- ∎
-  -- where open ≡-Reasoning
+... | (hi , cout) = let x-proof = proof-add x
+                        y-proof = proof-add y in
+  begin
+    cast _ (combine cout (combine (μ hi) (μ lo)))
+  ≡⟨ ? ⟩
+    addF' (addF' cin (combine (μ mhi) (μ mlo))) (combine (μ nhi) (μ nlo))
+  ∎
+  where open ≡-Reasoning
 
-  -- begin
-  --   digitize (P.map (pairμ μ) id (add (bigger-adder x y) mnp))
-  -- ≡⟨⟩
-  --   (toℕ ∘ uncurry combine ∘ swap) (P.map (pairμ μ) id (add (bigger-adder x y) mnp))
-  -- ≡⟨⟩
-  --   (toℕ ∘ uncurry combine ∘ swap) (P.map (pairμ μ) id (add (bigger-adder x y) mnp))
-  -- ≡⟨ ? ⟩
-  --   toℕ cin + toℕ (pairμ μ m) + toℕ (pairμ μ n)
-  -- ≡⟨⟩
-  --   add3 (P.map id (P.map (pairμ μ) (pairμ μ)) mnp)
-  -- ∎
-  --
+--  -- begin
+--  --   digitize (P.map (pairμ μ) id (add (bigger-adder x y) mnp))
+--  -- ≡⟨⟩
+--  --   (toℕ ∘ uncurry combine ∘ swap) (P.map (pairμ μ) id (add (bigger-adder x y) mnp))
+--  -- ≡⟨⟩
+--  --   (toℕ ∘ uncurry combine ∘ swap) (P.map (pairμ μ) id (add (bigger-adder x y) mnp))
+--  -- ≡⟨ ? ⟩
+--  --   toℕ cin + toℕ (pairμ μ m) + toℕ (pairμ μ n)
+--  -- ≡⟨⟩
+--  --   add3 (P.map id (P.map (pairμ μ) (pairμ μ)) mnp)
+--  -- ∎
+--  --
 
 add2x2 : IsAdd (pairμ interpretBF)
 add2x2 = bigger-adder add2 add2
