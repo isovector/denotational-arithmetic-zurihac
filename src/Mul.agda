@@ -238,15 +238,53 @@ proof-add (bigger-adder {size = size} {μ = μ}  x y) mnp@(cin , m@(mhi , mlo) ,
     size * (size * toℕ cout + toℕ (μ hi)) + toℕ (μ lo)
   ≡⟨ cong (\ φ → size * φ + toℕ (μ lo)) $ sym $ toℕ-combine cout (μ hi) ⟩
     size * toℕ (combine cout (μ hi)) + toℕ (μ lo)
-  ≡⟨ sym $ toℕ-combine (combine cout (μ hi)) (μ lo) ⟩
-    toℕ (combine (combine cout (μ hi)) (μ lo))
   ≡⟨⟩
-    toℕ (combine (uncurry combine (P.map₂ μ (cout , hi))) (μ lo))
+    size * toℕ (uncurry combine (cout , μ hi)) + toℕ (μ lo)
   ≡⟨⟩
-    toℕ (combine (uncurry combine (P.map₂ μ (swap (hi , cout)))) (μ lo))
-  ≡⟨ cong (\ φ → toℕ (combine (uncurry combine (P.map₂ μ (swap φ))) (μ lo))) $ sym $ x-eq ⟩
-    toℕ (combine (uncurry combine (P.map₂ μ (swap (x .add (cmid , mhi , nhi) )))) (μ lo))
-  ≡⟨ {! x .proof-add !} ⟩
+    size * toℕ (uncurry combine (P.map₂ μ (cout , hi))) + toℕ (μ lo)
+  ≡⟨⟩
+    size * toℕ (uncurry combine (P.map₂ μ (swap (hi , cout)))) + toℕ (μ lo)
+  ≡⟨ cong (\ φ → size * toℕ (uncurry combine (P.map₂ μ (swap φ))) + toℕ (μ lo)) $ sym $ x-eq ⟩
+    size * toℕ (uncurry combine (P.map₂ μ (swap (x .add (cmid , mhi , nhi))))) + toℕ (μ lo)
+  ≡⟨ (cong (λ φ → size * φ + toℕ (μ lo)) $ sym $ toℕ-cast _ (uncurry combine (map₂ μ (swap (x .add (cmid , mhi , nhi)))))) ⟩
+    size * toℕ (cast _ (uncurry combine (P.map₂ μ (swap (x .add (cmid , mhi , nhi)))))) + toℕ (μ lo)
+  ≡⟨ cong (\ φ → size * φ + toℕ (μ lo)) x-proof ⟩
+    size * toℕ (addF' (addF' cmid (μ mhi)) (μ nhi)) + toℕ (μ lo)
+  ≡⟨ cong (\ φ → size * φ + toℕ (μ lo)) $ toℕ-addF' (addF' cmid (μ mhi)) (μ nhi) ⟩
+    size * (toℕ (addF' cmid (μ mhi)) + toℕ (μ nhi)) + toℕ (μ lo)
+  ≡⟨ cong (\ φ → size * (φ + toℕ (μ nhi)) + toℕ (μ lo)) $ toℕ-addF' cmid $ μ mhi  ⟩
+    size * (toℕ cmid + toℕ (μ mhi) + toℕ (μ nhi)) + toℕ (μ lo)
+  ≡⟨ cong (λ z → size * z + toℕ (μ lo)) (+-assoc (toℕ cmid) (toℕ (μ mhi)) (toℕ (μ nhi))) ⟩
+    size * (toℕ cmid + (toℕ (μ mhi) + toℕ (μ nhi))) + toℕ (μ lo)
+  ≡⟨ cong (_+ toℕ (μ lo)) (*-distribˡ-+ size (toℕ cmid) (toℕ (μ mhi) + toℕ (μ nhi))) ⟩
+    size * toℕ cmid + size * (toℕ (μ mhi) + toℕ (μ nhi)) + toℕ (μ lo)
+  ≡⟨ +-assoc (size * toℕ cmid) (size * (toℕ (μ mhi) + toℕ (μ nhi))) (toℕ (μ lo)) ⟩
+    size * toℕ cmid + (size * (toℕ (μ mhi) + toℕ (μ nhi)) + toℕ (μ lo))
+  ≡⟨ cong (size * toℕ cmid +_) (+-comm (size * (toℕ (μ mhi) + toℕ (μ nhi))) (toℕ (μ lo))) ⟩
+    size * toℕ cmid + (toℕ (μ lo) + size * (toℕ (μ mhi) + toℕ (μ nhi)))
+  ≡˘⟨ +-assoc (size * toℕ cmid) (toℕ (μ lo)) (size * (toℕ (μ mhi) + toℕ (μ nhi))) ⟩
+    (size * toℕ cmid + toℕ (μ lo)) + size * (toℕ (μ mhi) + toℕ (μ nhi))
+  ≡⟨ cong (\ φ → φ + size * (toℕ (μ mhi) + toℕ (μ nhi))) $ sym $ toℕ-combine cmid (μ lo) ⟩
+    toℕ (combine cmid (μ lo)) + size * (toℕ (μ mhi) + toℕ (μ nhi))
+  ≡⟨⟩
+    toℕ (uncurry combine (cmid , μ lo)) + size * (toℕ (μ mhi) + toℕ (μ nhi))
+  ≡⟨⟩
+    toℕ (uncurry combine (P.map₂ μ (cmid , lo))) + size * (toℕ (μ mhi) + toℕ (μ nhi))
+  ≡⟨⟩
+    toℕ (uncurry combine (P.map₂ μ (swap (lo , cmid)))) + size * (toℕ (μ mhi) + toℕ (μ nhi))
+  ≡⟨ cong (\ φ → toℕ (uncurry combine (P.map₂ μ (swap φ))) + size * (toℕ (μ mhi) + toℕ (μ nhi))) $ sym y-eq ⟩
+    toℕ (uncurry combine (P.map₂ μ (swap (y .add (cin , mlo , nlo))))) + size * (toℕ (μ mhi) + toℕ (μ nhi))
+  ≡⟨ cong (\ φ → φ + size * (toℕ (μ mhi) + toℕ (μ nhi))) $ sym $ toℕ-cast _ (uncurry combine (P.map₂ μ (swap (y .add (cin , mlo , nlo))))) ⟩
+    toℕ (cast _ (uncurry combine (P.map₂ μ (swap (y .add (cin , mlo , nlo)))))) + size * (toℕ (μ mhi) + toℕ (μ nhi))
+  ≡⟨ cong (\ φ → φ + size * (toℕ (μ mhi) + toℕ (μ nhi))) $ y-proof ⟩
+    toℕ (addF' (addF' cin (μ mlo)) (μ nlo)) + size * (toℕ (μ mhi) + toℕ (μ nhi))
+  ≡⟨ cong (\ φ → φ + size * (toℕ (μ mhi) + toℕ (μ nhi))) $ toℕ-addF' (addF' cin (μ mlo)) (μ nlo) ⟩
+    toℕ (addF' cin (μ mlo)) + toℕ (μ nlo) + size * (toℕ (μ mhi) + toℕ (μ nhi))
+  ≡⟨ cong (\ φ → φ + toℕ (μ nlo) + size * (toℕ (μ mhi) + toℕ (μ nhi))) $ toℕ-addF' cin (μ mlo) ⟩
+    toℕ cin + toℕ (μ mlo) + toℕ (μ nlo) + size * (toℕ (μ mhi) + toℕ (μ nhi))
+  ≡⟨⟩
+    ((toℕ cin + toℕ (μ mlo)) + toℕ (μ nlo)) + size * (toℕ (μ mhi) + toℕ (μ nhi))
+  ≡⟨ {! taneb !} ⟩
     toℕ cin + (size * toℕ (μ mhi) + toℕ (μ mlo)) + (size * toℕ (μ nhi) + toℕ (μ nlo))
   ≡⟨ (sym $ cong (λ φ → toℕ cin + φ + (size * toℕ (μ nhi) + toℕ (μ nlo))) (toℕ-combine (μ mhi) (μ mlo))) ⟩
     toℕ cin + toℕ (combine (μ mhi) (μ mlo)) + (size * toℕ (μ nhi) + toℕ (μ nlo))
