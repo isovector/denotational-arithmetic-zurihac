@@ -72,13 +72,6 @@ module _ {τ : Set} {size : ℕ} {μ : τ → Fin size} where
         (abc , cout2)  = add (zero , ab , (proj₂ z , c))
      in abc
 
--- (a , b) * (c , d)
--- (ax + b) * (cx + d)
--- (acx^2 + adx + bcx + bd)
--- ((0x + 6)x^2 + (0x + 3)x + (3x + 0)x + (1x + 5))
--- (0x^3 + 6x^2 + 0x^2 + 3x + 3x^2 + 0x + 1x + 5)
--- (0x^3 + (6 + 0 + 3)x^2 + (3 + 0 + 1)x + 5)
--- ((0 , 9) , (4 , 5))
 
 compose
     : {τ : Set} {size : ℕ} {μ : τ → Fin size}
@@ -110,6 +103,7 @@ IsMult.proof-mult (compose {μ = μ} small adder multipler) ab@(a , b) cd@(c , d
 
 --------------------------------------------------------------------------------
 
+-- this exists in the future
 postulate toℕ-combine : ∀ {m n} (i : Fin m) (j : Fin n) → toℕ (combine i j) ≡ n * toℕ i + toℕ j
 
 bigger-adder : {τ : Set} {size : ℕ} {μ : τ → Fin size} → IsAdd μ → IsAdd μ → IsAdd (pairμ μ)
@@ -356,15 +350,15 @@ _ = refl
 
 -- 2 trit multiplcation table
 _ : (V.map (toℕ ∘ pairμ (pairμ interpret3) ∘ uncurry (mult mul3x3)) $ composeTheValues allThrees3x3 allThrees3x3)
- ≡ (0 ∷ 0 ∷  0 ∷  0 ∷  0 ∷  0 ∷  0 ∷  0 ∷  0 ∷
-    0 ∷ 1 ∷  2 ∷  3 ∷  4 ∷  5 ∷  6 ∷  7 ∷  8 ∷
-    0 ∷ 2 ∷  4 ∷  6 ∷  8 ∷ 10 ∷ 12 ∷ 14 ∷ 16 ∷
-    0 ∷ 3 ∷  6 ∷  9 ∷ 12 ∷ 15 ∷ 18 ∷ 21 ∷ 24 ∷
-    0 ∷ 4 ∷  8 ∷ 12 ∷ 16 ∷ 20 ∷ 24 ∷ 28 ∷ 32 ∷
-    0 ∷ 5 ∷ 10 ∷ 15 ∷ 20 ∷ 25 ∷ 30 ∷ 35 ∷ 40 ∷
-    0 ∷ 6 ∷ 12 ∷ 18 ∷ 24 ∷ 30 ∷ 36 ∷ 42 ∷ 48 ∷
-    0 ∷ 7 ∷ 14 ∷ 21 ∷ 28 ∷ 35 ∷ 42 ∷ 49 ∷ 56 ∷
-    0 ∷ 8 ∷ 16 ∷ 24 ∷ 32 ∷ 40 ∷ 48 ∷ 56 ∷ 64
-    ∷ [])
+ ≡ (0 ∷ 0 ∷  0 ∷  0 ∷  0 ∷  0 ∷  0 ∷  0 ∷  0
+  ∷ 0 ∷ 1 ∷  2 ∷  3 ∷  4 ∷  5 ∷  6 ∷  7 ∷  8
+  ∷ 0 ∷ 2 ∷  4 ∷  6 ∷  8 ∷ 10 ∷ 12 ∷ 14 ∷ 16
+  ∷ 0 ∷ 3 ∷  6 ∷  9 ∷ 12 ∷ 15 ∷ 18 ∷ 21 ∷ 24
+  ∷ 0 ∷ 4 ∷  8 ∷ 12 ∷ 16 ∷ 20 ∷ 24 ∷ 28 ∷ 32
+  ∷ 0 ∷ 5 ∷ 10 ∷ 15 ∷ 20 ∷ 25 ∷ 30 ∷ 35 ∷ 40
+  ∷ 0 ∷ 6 ∷ 12 ∷ 18 ∷ 24 ∷ 30 ∷ 36 ∷ 42 ∷ 48
+  ∷ 0 ∷ 7 ∷ 14 ∷ 21 ∷ 28 ∷ 35 ∷ 42 ∷ 49 ∷ 56
+  ∷ 0 ∷ 8 ∷ 16 ∷ 24 ∷ 32 ∷ 40 ∷ 48 ∷ 56 ∷ 64
+  ∷ [])
 _ = refl
 
