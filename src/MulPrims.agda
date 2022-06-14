@@ -5,7 +5,6 @@ open import Function.Base
 open import Data.Bool.Base hiding (_<_; _≤_)
 open import Data.Nat.Base
 open import Data.Nat.Properties
-open import Data.Nat.Solver
 open import Data.Vec hiding (map)
 import Data.Vec as V
 open import Data.Product as P hiding (map)
@@ -15,7 +14,6 @@ open import Relation.Binary.PropositionalEquality
 
 open IsAdd
 open IsMult
-open IsMult'
 
 --------------------------------------------------------------------------------
 
@@ -52,10 +50,6 @@ proof-mult mul2 false false = refl
 proof-mult mul2 false true  = refl
 proof-mult mul2 true  false = refl
 proof-mult mul2 true  true  = refl
-
-mul2' : IsMult' interpret2 interpret2
-mult' mul2' = mul2 .mult
-proof-mult' mul2' = mul2 .proof-mult
 
 --------------------------------------------------------------------------------
 
