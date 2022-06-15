@@ -12,7 +12,7 @@ open import Data.Fin.Base as F hiding (_+_; _<_; _≤_)
 open import Data.Fin.Properties hiding (bounded)
 open import Relation.Binary.PropositionalEquality
 
-open IsAdd
+open Adder
 open IsMult
 
 --------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ interpret2 : Bool → Fin 2
 interpret2 false = zero
 interpret2 true  = suc zero
 
-add2 : IsAdd interpret2
+add2 : Adder interpret2
 add add2 (zero , false , false)     = false , zero
 add add2 (zero , false , true)      = true  , zero
 add add2 (zero , true , false)      = true  , zero
@@ -63,7 +63,7 @@ interpret3 zero = zero
 interpret3 one = suc zero
 interpret3 two = suc (suc zero)
 
-add3 : IsAdd interpret3
+add3 : Adder interpret3
 add add3 (zero , zero , zero)     = zero , zero
 add add3 (zero , zero , one)      = one  , zero
 add add3 (zero , zero , two)      = two  , zero
@@ -125,19 +125,19 @@ proof-mult mul3 two two   = refl
 
 --------------------------------------------------------------------------------
 
-add2x2 : IsAdd (pairμ interpret2)
+add2x2 : Adder (pairμ interpret2)
 add2x2 = bigger-adder add2 add2
 
 mul2x2 : _
 mul2x2 = compose add2 add2x2 mul2
 
-add2x2x2x2 : IsAdd (pairμ (pairμ interpret2))
+add2x2x2x2 : Adder (pairμ (pairμ interpret2))
 add2x2x2x2 = bigger-adder add2x2 add2x2
 
 mul2x2x2x2 : _
 mul2x2x2x2 = compose add2x2 add2x2x2x2 mul2x2
 
-add3x3 : IsAdd (pairμ interpret3)
+add3x3 : Adder (pairμ interpret3)
 add3x3 = bigger-adder add3 add3
 
 mul3x3 : IsMult (pairμ interpret3)

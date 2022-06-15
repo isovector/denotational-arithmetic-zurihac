@@ -64,7 +64,7 @@ addF'3 (m , n , p) = addF' (addF' m n) p
 digitize : ∀ {m} → Fin m × Fin 2 → Fin (m + m)
 digitize {m} = cast (trans (sym $ +-assoc m m 0)(+-comm (m + m) 0)) ∘ uncurry combine ∘ swap
 
-record IsAdd {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
+record Adder {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
   constructor adds
   field
     add : Fin 2 × τ × τ → τ × Fin 2
@@ -72,7 +72,7 @@ record IsAdd {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
     proof-add
       : (mnp : Fin 2 × τ × τ)
       → toℕ (digitize (P.map μ id (add mnp))) ≡ toℕ (addF'3 (P.map id (P.map μ μ) mnp))
-open IsAdd
+open Adder
 
 --------------------------------------------------------------------------------
 
@@ -101,23 +101,23 @@ pairμ : {τ : Set} → {size : ℕ} → (τ → Fin size) → (τ × τ → Fin
 pairμ μ = uncurry combine ∘ P.map μ μ
 
 module _ {τ : Set} {size : ℕ} {μ : τ → Fin size} where
-  add3Adder' : IsAdd (pairμ μ) → Fin 2 → τ → τ → τ → (τ × τ)
+  add3Adder' : Adder (pairμ μ) → Fin 2 → τ → τ → τ → (τ × τ)
   add3Adder' (adds add z _) cin a b c =
     let (ab  , cout1)  = add (cin , (proj₂ z , a) , (proj₂ z , b))
         (abc , cout2)  = add (zero , ab , (proj₂ z , c))
      in abc
 
   add3Adder'-proof
-    : (adder : IsAdd (pairμ μ))
+    : (adder : Adder (pairμ μ))
     → (cin : Fin 2)
     → (m n o : τ)
     → toℕ (uncurry combine (P.map μ μ (add3Adder' adder cin m n o))) ≡ toℕ cin + toℕ (μ m) + toℕ (μ n) + toℕ (μ o)
-  add3Adder'-proof = ?
+  add3Adder'-proof = {!!}
 
 compose
     : {τ : Set} {size : ℕ} {μ : τ → Fin size}
-    → IsAdd μ
-    → IsAdd (pairμ μ)
+    → Adder μ
+    → Adder (pairμ μ)
     → IsMult μ
     → IsMult {τ × τ} {size * size} (pairμ μ)
 IsMult.mult (compose {τ} {size} {μ} small adder multipler) (a , b) (c , d) =
@@ -171,7 +171,7 @@ IsMult.proof-mult (compose {τ} {size} {μ} small adder multipler) ab@(a , b) cd
     size * size * (size * ℕμ k + ℕμ lig) + ℕμ' ehj f
   ≡⟨ cong (\ φ → size * size * (size * ℕμ k + ℕμ lig) + φ) $ toℕ-combine (μ ehj) (μ f) ⟩
     size * size * (size * ℕμ k + ℕμ lig) + (size * ℕμ ehj + ℕμ f)
-  ≡⟨ ? ⟩
+  ≡⟨ {!!} ⟩
     size * size * toℕ (combine (μ k0) (μ l)) + size * toℕ (combine (μ g) (μ h)) + size * toℕ (combine (μ i) (μ j)) + toℕ (combine (μ e) (μ f))
   ≡⟨⟩
     size * size * ℕμ' k0 l + size * ℕμ' g h + size * ℕμ' i j + ℕμ' e f
@@ -207,7 +207,7 @@ IsMult.proof-mult (compose {τ} {size} {μ} small adder multipler) ab@(a , b) cd
 --------------------------------------------------------------------------------
 
 
-bigger-adder : {σ τ : Set} {σ-size τ-size : ℕ} {μ : σ → Fin σ-size} {ν : τ → Fin τ-size} → IsAdd μ → IsAdd ν → IsAdd (uncurry combine ∘ P.map μ ν)
+bigger-adder : {σ τ : Set} {σ-size τ-size : ℕ} {μ : σ → Fin σ-size} {ν : τ → Fin τ-size} → Adder μ → Adder ν → Adder (uncurry combine ∘ P.map μ ν)
 add (bigger-adder x y) (cin , (mhi , mlo) , (nhi , nlo)) =
   let (lo , cmid) = y .add (cin  , mlo , nlo)
       (hi , cout) = x .add (cmid , mhi , nhi)
