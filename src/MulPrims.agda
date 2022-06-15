@@ -13,7 +13,7 @@ open import Data.Fin.Properties hiding (bounded)
 open import Relation.Binary.PropositionalEquality
 
 open Adder
-open IsMult
+open Multiplier
 
 --------------------------------------------------------------------------------
 
@@ -40,7 +40,7 @@ proof-add add2 (suc zero , false , true)  = refl
 proof-add add2 (suc zero , true  , false) = refl
 proof-add add2 (suc zero , true  , true)  = refl
 
-mul2 : IsMult interpret2
+mul2 : Multiplier interpret2
 mult mul2 false false = false , false
 mult mul2 false true  = false , false
 mult mul2 true  false = false , false
@@ -102,7 +102,7 @@ proof-add add3 (suc zero , zero , two)  = refl
 proof-add add3 (suc zero , one , two)   = refl
 proof-add add3 (suc zero , two , two)   = refl
 
-mul3 : IsMult interpret3
+mul3 : Multiplier interpret3
 mult mul3 zero zero = zero , zero
 mult mul3 zero one  = zero , zero
 mult mul3 zero two  = zero , zero
@@ -140,7 +140,7 @@ mul2x2x2x2 = compose add2x2 add2x2x2x2 mul2x2
 add3x3 : Adder (pairμ interpret3)
 add3x3 = bigger-adder add3 add3
 
-mul3x3 : IsMult (pairμ interpret3)
+mul3x3 : Multiplier (pairμ interpret3)
 mul3x3 = compose add3 add3x3 mul3
 
 --------------------------------------------------------------------------------

@@ -79,7 +79,7 @@ open Adder
 
 
 
-record IsMult {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
+record Multiplier {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
   constructor multiples
   field
     mult : τ → τ → τ × τ
@@ -88,7 +88,7 @@ record IsMult {τ : Set} {size : ℕ} (μ : τ → Fin size) : Set where
       : (m n : τ)
       → toℕ (uncurry combine (P.map μ μ (mult m n)))
       ≡ toℕ (mulF' (μ m) (μ n))
-open IsMult
+open Multiplier
 
 --------------------------------------------------------------------------------
 
@@ -118,9 +118,9 @@ compose
     : {τ : Set} {size : ℕ} {μ : τ → Fin size}
     → Adder μ
     → Adder (pairμ μ)
-    → IsMult μ
-    → IsMult {τ × τ} {size * size} (pairμ μ)
-IsMult.mult (compose {τ} {size} {μ} small adder multipler) (a , b) (c , d) =
+    → Multiplier μ
+    → Multiplier {τ × τ} {size * size} (pairμ μ)
+mult (compose {τ} {size} {μ} small adder multipler) (a , b) (c , d) =
   let (k0 , l) = multipler .mult a c -- x2
       (g , h)  = multipler .mult a d
       (e , f)  = multipler .mult b d
@@ -139,8 +139,8 @@ IsMult.mult (compose {τ} {size} {μ} small adder multipler) (a , b) (c , d) =
       -- = (kx + l)x^2 + (ix + j)x + (gx + h)x + (ex + f))
       -- = (kx^3 + (l + i + g)x^2 + (j + h + e)x + f
    in (k , lig) , (ehj , f)
-IsMult.zeroM (compose small adder multipler) = multipler .zeroM  , multipler .zeroM
-IsMult.proof-mult (compose {τ} {size} {μ} small adder multipler) ab@(a , b) cd@(c , d)
+zeroM (compose small adder multipler) = multipler .zeroM  , multipler .zeroM
+proof-mult (compose {τ} {size} {μ} small adder multipler) ab@(a , b) cd@(c , d)
                       with multipler .mult a c in ac-eq
 ... | (k0 , l)        with multipler .mult a d in ad-eq
 ... | (g , h)         with multipler .mult b d in bd-eq
