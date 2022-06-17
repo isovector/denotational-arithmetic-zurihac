@@ -11,7 +11,7 @@ open import Data.Vec hiding (map)
 import Data.Vec as V
 open import Data.Product as P hiding (map)
 open import Data.Fin.Base as F hiding (_+_; _<_; _≤_)
-open import Data.Fin.Properties hiding (bounded)
+open import Data.Fin.Properties
 open import Relation.Binary.PropositionalEquality
 
 --------------------------------------------------------------------------------
@@ -92,8 +92,8 @@ open IsMult
 
 --------------------------------------------------------------------------------
 
--- this exists in the future
-postulate toℕ-combine : ∀ {m n} (i : Fin m) (j : Fin n) → toℕ (combine i j) ≡ n * toℕ i + toℕ j
+-- -- this exists in the future
+-- postulate toℕ-combine : ∀ {m n} (i : Fin m) (j : Fin n) → toℕ (combine i j) ≡ n * toℕ i + toℕ j
 
 --------------------------------------------------------------------------------
 
@@ -113,96 +113,6 @@ module _ {τ : Set} {size : ℕ} {μ : τ → Fin size} where
     → (m n o : τ)
     → toℕ (uncurry combine (P.map μ μ (add3Adder' adder cin m n o))) ≡ toℕ cin + toℕ (μ m) + toℕ (μ n) + toℕ (μ o)
   add3Adder'-proof = ?
-
-compose
-    : {τ : Set} {size : ℕ} {μ : τ → Fin size}
-    → IsAdd μ
-    → IsAdd (pairμ μ)
-    → IsMult μ
-    → IsMult {τ × τ} {size * size} (pairμ μ)
-IsMult.mult (compose {τ} {size} {μ} small adder multipler) (a , b) (c , d) =
-  let (k0 , l) = multipler .mult a c -- x2
-      (g , h)  = multipler .mult a d
-      (e , f)  = multipler .mult b d
-      (i , j)  = multipler .mult b c
-
-      (ehjhi , ehj)   = add3Adder' {τ = τ} {size} {μ} adder zero e h j
-      (lighi , liglo) = add3Adder' {τ = τ} {size} {μ} adder zero l i g
-      (lig , carry)   = small .add (zero  , ehjhi , liglo)
-      (k , _)         = small .add (carry , k0    , lighi)
-
-      -- (ax + b) * (cx + d) = (acx^2 + bcx + adx + bd)
-      -- bd = (ex + f)
-      -- ad = (gx + h)
-      -- bc = (ix + j)
-      -- ac = (kx + l)
-      -- = (kx + l)x^2 + (ix + j)x + (gx + h)x + (ex + f))
-      -- = (kx^3 + (l + i + g)x^2 + (j + h + e)x + f
-   in (k , lig) , (ehj , f)
-IsMult.zeroM (compose small adder multipler) = multipler .zeroM  , multipler .zeroM
-IsMult.proof-mult (compose {τ} {size} {μ} small adder multipler) ab@(a , b) cd@(c , d)
-                      with multipler .mult a c in ac-eq
-... | (k0 , l)        with multipler .mult a d in ad-eq
-... | (g , h)         with multipler .mult b d in bd-eq
-... | (e , f)         with multipler .mult b c in bc-eq
-... | (i , j)         with add3Adder' {τ = τ} {size} {μ} adder zero e h j in add-ehj-eq
-... | (ehjhi , ehj)   with add3Adder' {τ = τ} {size} {μ} adder zero l i g in add-lig-eq
-... | (lighi , liglo) with small .add (zero  , ehjhi , liglo) in add-ehj-lig
-... | (lig , carry)   with small .add (carry , k0    , lighi) in add-k0-lig
-... | (k , _) = let
-                    ac-proof = multipler .proof-mult a c
-                    ad-proof = multipler .proof-mult a d
-                    bd-proof = multipler .proof-mult b d
-                    bc-proof = multipler .proof-mult b c
-                    egjhi-liglo-proof = small .proof-add  (zero  , ehjhi , liglo)
-                    k0-lighi-proof    = small .proof-add  (carry  , k0 , lighi)
-                    add3-1-proof = add3Adder'-proof {τ = τ} {size} {μ} adder zero e h j
-                    add3-2-proof = add3Adder'-proof {τ = τ} {size} {μ} adder zero l i g
-                    ℕμ = toℕ ∘ μ
-                    μ' = curry $ pairμ μ
-                    ℕμ' = λ x y → toℕ (μ' x y)
-                 in
-
-  begin
-    toℕ (combine (μ' k lig) (μ' ehj f))
-  ≡⟨ toℕ-combine (μ' k lig) (μ' ehj f) ⟩
-    size * size * ℕμ' k lig + ℕμ' ehj f
-  ≡⟨ cong (\ φ → size * size * φ + ℕμ' ehj f) $ toℕ-combine (μ k) (μ lig) ⟩
-    size * size * (size * ℕμ k + ℕμ lig) + ℕμ' ehj f
-  ≡⟨ cong (\ φ → size * size * (size * ℕμ k + ℕμ lig) + φ) $ toℕ-combine (μ ehj) (μ f) ⟩
-    size * size * (size * ℕμ k + ℕμ lig) + (size * ℕμ ehj + ℕμ f)
-  ≡⟨ ? ⟩
-    size * size * toℕ (combine (μ k0) (μ l)) + size * toℕ (combine (μ g) (μ h)) + size * toℕ (combine (μ i) (μ j)) + toℕ (combine (μ e) (μ f))
-  ≡⟨⟩
-    size * size * ℕμ' k0 l + size * ℕμ' g h + size * ℕμ' i j + ℕμ' e f
-  ≡⟨ cong (\ φ → size * size * ℕμ' k0 l + size * ℕμ' g h + size * ℕμ' i j + toℕ (uncurry combine (P.map μ μ φ))) $ sym bd-eq ⟩
-    size * size * ℕμ' k0 l + size * ℕμ' g h + size * ℕμ' i j + toℕ (uncurry combine (P.map μ μ (mult multipler b d)))
-  ≡⟨ cong (\ φ → size * size * ℕμ' k0 l + size * ℕμ' g h + size * ℕμ' i j + φ) $ trans bd-proof $ toℕ-mulF' (μ b) (μ d) ⟩
-    size * size * ℕμ' k0 l + size * ℕμ' g h + size * ℕμ' i j + ℕμ b * ℕμ d
-  ≡⟨ cong (\ φ → size * size * ℕμ' k0 l + size * ℕμ' g h + size * toℕ (uncurry combine (P.map μ μ φ)) + ℕμ b * ℕμ d) $ sym bc-eq ⟩
-    size * size * ℕμ' k0 l + size * ℕμ' g h + size * toℕ (uncurry combine (P.map μ μ (mult multipler b c))) + ℕμ b * ℕμ d
-  ≡⟨ cong (\ φ → size * size * ℕμ' k0 l + size * ℕμ' g h + size * φ + ℕμ b * ℕμ d) $ trans bc-proof $ toℕ-mulF' (μ b) (μ c) ⟩
-    size * size * ℕμ' k0 l + size * ℕμ' g h + size * (ℕμ b * ℕμ c) + ℕμ b * ℕμ d
-  ≡⟨ cong (\ φ → size * size * ℕμ' k0 l + size * toℕ (uncurry combine (P.map μ μ φ)) + size * (ℕμ b * ℕμ c) + ℕμ b * ℕμ d) $ sym ad-eq ⟩
-    size * size * ℕμ' k0 l + size * toℕ (uncurry combine (P.map μ μ (mult multipler a d))) + size * (ℕμ b * ℕμ c) + ℕμ b * ℕμ d
-  ≡⟨ cong (\ φ → size * size * ℕμ' k0 l + size * φ + size * (ℕμ b * ℕμ c) + ℕμ b * ℕμ d) $ trans ad-proof $ toℕ-mulF' (μ a) (μ d) ⟩
-    size * size * ℕμ' k0 l + size * (ℕμ a * ℕμ d) + size * (ℕμ b * ℕμ c) + ℕμ b * ℕμ d
-  ≡⟨ cong (\ φ → (size * size * toℕ (uncurry combine (P.map μ μ φ))) + (size * (ℕμ a * ℕμ d)) + (size * (ℕμ b * ℕμ c)) + (ℕμ b * ℕμ d)) $ sym ac-eq ⟩
-    (size * size * toℕ (uncurry combine (P.map μ μ (mult multipler a c)))) + (size * (ℕμ a * ℕμ d)) + (size * (ℕμ b * ℕμ c)) + (ℕμ b * ℕμ d)
-  ≡⟨ cong (\ φ → (size * size * φ) + (size * (ℕμ a * ℕμ d)) + (size * (ℕμ b * ℕμ c)) + (ℕμ b * ℕμ d)) ac-proof ⟩
-    (size * size * toℕ (mulF' (μ a) (μ c))) + (size * (ℕμ a * ℕμ d)) + (size * (ℕμ b * ℕμ c)) + (ℕμ b * ℕμ d)
-  ≡⟨ cong (\ φ → (size * size * φ) + (size * (ℕμ a * ℕμ d)) + (size * (ℕμ b * ℕμ c)) + (ℕμ b * ℕμ d)) $ toℕ-mulF' (μ a) (μ c) ⟩
-    (size * size * (ℕμ a * ℕμ c)) + (size * (ℕμ a * ℕμ d)) + (size * (ℕμ b * ℕμ c)) + (ℕμ b * ℕμ d)
-  ≡⟨ {! ring solve me !} ⟩
-    (size * ℕμ a + ℕμ b) * (size * ℕμ c + ℕμ d)
-  ≡⟨ sym $ cong₂ _*_ (toℕ-combine (μ a) (μ b)) (toℕ-combine (μ c) (μ d)) ⟩
-    ℕμ' a b * ℕμ' c d
-  ≡⟨ sym $ toℕ-mulF' (μ' a b) _ ⟩
-    toℕ (mulF' (μ' a b) (μ' c d))
-  ∎
-  where
-    open ≡-Reasoning
-    open +-*-Solver
 
 --------------------------------------------------------------------------------
 
