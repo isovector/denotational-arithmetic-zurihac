@@ -2,6 +2,7 @@
 
 module Mul where
 
+open import Agda.Builtin.Unit
 open import Function.Base
 open import Data.Bool.Base hiding (_<_; _≤_)
 open import Data.Nat.Base
@@ -100,61 +101,13 @@ postulate toℕ-combine : ∀ {m n} (i : Fin m) (j : Fin n) → toℕ (combine i
 
 --------------------------------------------------------------------------------
 
-pairμ : {τ : Set} → {size : ℕ} → (τ → Fin size) → (τ × τ → Fin (size * size))
-pairμ μ = uncurry combine ∘ P.map μ μ
+-- Adder interpretUnit interpretUnit gives a crude binary adder.
+-- Adder interpretUnit x doubles the size of x
+interpretUnit : ⊤ → Fin 1
+interpretUnit _ = zero
 
-module _ {τ : Set} {size : ℕ} {μ : τ → Fin size} where
-  add3Adder' : Adder (pairμ μ) → Fin 2 → τ → τ → τ → (τ × τ)
-  add3Adder' (adds add z _) cin a b c =
-    let (ab  , cout1)  = add (cin , (proj₂ z , a) , (proj₂ z , b))
-        (abc , cout2)  = add (zero , ab , (proj₂ z , c))
-     in abc
-
-  add3Adder'-proof
-    : (adder : Adder (pairμ μ))
-    → (cin : Fin 2)
-    → (m n o : τ)
-    → toℕ (uncurry combine (P.map μ μ (add3Adder' adder cin m n o))) ≡ toℕ cin + toℕ (μ m) + toℕ (μ n) + toℕ (μ o)
-  add3Adder'-proof = {!!}
-
-compose
-    : {τ : Set} {size : ℕ} {μ : τ → Fin size}
-    → Adder μ
-    → Adder (pairμ μ)
-    → Multiplier μ
-    → Multiplier {τ × τ} {size * size} (pairμ μ)
-mult (compose {τ} {size} {μ} small adder multipler) (a , b) (c , d) =
-  let (k0 , l) = multipler .mult a c -- x2
-      (g , h)  = multipler .mult a d
-      (e , f)  = multipler .mult b d
-      (i , j)  = multipler .mult b c
-
-      (ehjhi , ehj)   = add3Adder' {τ = τ} {size} {μ} adder zero e h j
-      (lighi , liglo) = add3Adder' {τ = τ} {size} {μ} adder zero l i g
-      (lig , carry)   = small .add (zero  , ehjhi , liglo)
-      (k , _)         = small .add (carry , k0    , lighi)
-
-      -- (ax + b) * (cx + d) = (acx^2 + bcx + adx + bd)
-      -- bd = (ex + f)
-      -- ad = (gx + h)
-      -- bc = (ix + j)
-      -- ac = (kx + l)
-      -- = (kx + l)x^2 + (ix + j)x + (gx + h)x + (ex + f))
-      -- = (kx^3 + (l + i + g)x^2 + (j + h + e)x + f
-   in (k , lig) , (ehj , f)
-zeroM (compose small adder multipler) = multipler .zeroM  , multipler .zeroM
-proof-mult (compose {τ} {size} {μ} small adder multipler) ab@(a , b) cd@(c , d)
-
-    <?>
-  ∎
-  where
-    open ≡-Reasoning
-    open +-*-Solver
-
---------------------------------------------------------------------------------
-
-
-bigger-adder : {σ τ : Set} {σ-size τ-size : ℕ} {μ : σ → Fin σ-size} {ν : τ → Fin τ-size} → Adder μ → Adder ν → Adder (uncurry combine ∘ P.map μ ν)
+-- absorb an interpretation into the adder to create a bigger one
+bigger-adder : {σ τ υ : Set} {σ-size τ-size υ-size : ℕ} {μ : σ → Fin σ-size} {ν : τ → Fin τ-size} {ξ : υ → Fin υ-size} → Adder μ ν → Adder interpretUnit ξ → Adder μ (F.join τ-size υ-size ∘ S.map ν ξ)
 add (bigger-adder x y) (cin , (mhi , mlo) , (nhi , nlo)) =
   let (lo , cmid) = y .add (cin  , mlo , nlo)
       (hi , cout) = x .add (cmid , mhi , nhi)
