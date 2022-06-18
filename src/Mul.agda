@@ -66,7 +66,7 @@ record Adder {τ ρ : Set} {sizeτ sizeρ : ℕ} (μ : τ → Fin sizeτ) (ν : 
   constructor adds
   field
     add : τ × ρ → τ ⊎ ρ
-    zeroA : τ
+    zeroA : ρ
     proof-add
       : (mnp : τ × ρ)
       →
