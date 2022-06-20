@@ -67,7 +67,6 @@ record Adder {τ ρ : Set} {sizeτ sizeρ : ℕ} (μ : τ → Fin sizeτ) (ν : 
   constructor adds
   field
     add : τ × ρ → τ ⊎ ρ
-    zeroA : ρ
     proof-add
       : (mnp : τ × ρ)
       →
@@ -106,24 +105,18 @@ postulate toℕ-combine : ∀ {m n} (i : Fin m) (j : Fin n) → toℕ (combine i
 interpretUnit : ⊤ → Fin 1
 interpretUnit _ = zero
 
+
 -- absorb an interpretation into the adder to create a bigger one
-bigger-adder : {σ τ υ : Set} {σ-size τ-size υ-size : ℕ} {μ : σ → Fin σ-size} {ν : τ → Fin τ-size} {ξ : υ → Fin υ-size} → Adder μ ν → Adder interpretUnit ξ → Adder μ (F.join τ-size υ-size ∘ S.map ν ξ)
-add (bigger-adder x y) (cin , (mhi , mlo) , (nhi , nlo)) =
-  let (lo , cmid) = y .add (cin  , mlo , nlo)
-      (hi , cout) = x .add (cmid , mhi , nhi)
-  in ((hi , lo) , cout)
-zeroA (bigger-adder x y) = x .zeroA , y .zeroA
+bigger-adder : {ρ τ υ : Set} {ρ-size τ-size υ-size : ℕ} {μ : ρ → Fin ρ-size} {ν : τ → Fin τ-size} {ξ : υ → Fin υ-size} → Adder μ ν → Adder μ ξ → Adder μ (F.join τ-size υ-size ∘ S.map ν ξ)
+add (bigger-adder x y ) (ρ , inj₁ τ) = S.map₂ inj₁ $ x .add $ ρ , τ
+add (bigger-adder x y ) (ρ , inj₂ ξ) = S.map₂ inj₂ $ y .add $ ρ , ξ
 proof-add (bigger-adder {σ-size = σ-size} {τ-size = τ-size} {μ = μ} {ν = ν} x y)  (cin , (mhi , mlo) , (nhi , nlo))
     <?>
   where
-    open ≡-Reasoning
-    open +-*-Solver
-    lemma₁ : ∀ a b c d e → a * b * c + (b * d + e) ≡ b * (a * c + d) + e
-    lemma₁ = solve 5 (λ a b c d e → a :* b :* c :+ (b :* d :+ e) := (b :* (a :* c :+ d) :+ e)) refl
 
-    lemma₂ : ∀ a b c d e → a * (b + c + d) + e ≡ (a * b + e) + a * (c + d)
-    lemma₂ = solve 5 (λ a b c d e → a :* (b :+ c :+ d) :+ e := (a :* b :+ e) :+ a :* (c :+ d)) refl
 
-    lemma₃ : ∀ a b c d e f → a + b + c + d * (e + f) ≡ a + (d * e + b) + (d * f + c)
-    lemma₃ = solve 6 (λ a b c d e f → a :+ b :+ c :+ d :* (e :+ f) := a :+ (d :* e :+ b) :+ (d :* f :+ c)) refl
-
+-- ??? wtf
+-- commute-adder : Adder μ ν →  Adder ν μ
+-- commute-adder = <?>
+-- why is this bad?
+-- do we still have low and high bits?
