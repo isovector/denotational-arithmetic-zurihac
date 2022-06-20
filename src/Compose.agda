@@ -69,60 +69,37 @@ proof-mult (compose {τ} {size} {μ} small adder multipler) (a , b) (c , d)
                  in
 
   begin
-    toℕ (combine (μ' k lig) (μ' ehj f))
-  ≡⟨ toℕ-combine (μ' k lig) (μ' ehj f) ⟩
-    size * size * ℕμ' k lig + ℕμ' ehj f
-  ≡⟨ cong! (toℕ-combine (μ k) (μ lig)) ⟩
-    size * size * (size * ℕμ k + ℕμ lig) + ℕμ' ehj f
-  ≡⟨ cong! (toℕ-combine (μ ehj) (μ f)) ⟩
-    size * size * (size * ℕμ k + ℕμ lig) + (size * ℕμ ehj + ℕμ f)
-  ≡⟨ lemma₃ size (ℕμ k) (ℕμ lig) (ℕμ ehj) (ℕμ f) ⟩
-    size * size * size * toℕ (μ k) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨ cong (\ φ → size * size * size * (φ + toℕ (μ k)) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)) $ *-comm (toℕ (zero {1})) size ⟩
-    size * size * size * (size * toℕ (zero {1}) + toℕ (μ k)) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨ cong (\ φ → size * size * size * (size * toℕ φ + toℕ (μ k)) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)) $ sym drop-carry-0  ⟩
-    size * size * size * (size * toℕ -drop-carry + toℕ (μ k)) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨ cong! (sym $ toℕ-combine -drop-carry (μ k)) ⟩
-    size * size * size * toℕ (combine -drop-carry (μ k)) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨ cong (\ φ → size * size * size * φ + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)) $ sym $ toℕ-cast _ (combine -drop-carry (μ k)) ⟩
-    size * size * size * toℕ (cast _ (combine -drop-carry (μ k))) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨ cong (\ φ → size * size * size * toℕ (digitize (P.map μ id φ)) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)) $ sym -add-k0-lig ⟩
-    size * size * size * toℕ (digitize (P.map μ id (add small (carry , k0 , lighi)))) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨ cong (\ φ → size * size * size * φ + size * size * (toℕ (μ lig)) + size * toℕ (μ ehj) + toℕ (μ f)) -k0-lighi-proof ⟩
-    size * size * size * toℕ (addF'3 (carry , μ k0 , μ lighi)) + size * size * (toℕ (μ lig)) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨⟩
-    size * size * size * toℕ (addF' (addF' carry (μ k0)) (μ lighi)) + size * size * (toℕ (μ lig)) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨ cong! (toℕ-addF' (addF' carry (μ k0)) (μ lighi)) ⟩
-    size * size * size * (toℕ (addF' carry (μ k0)) + toℕ (μ lighi)) + size * size * (toℕ (μ lig)) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨ cong! (toℕ-addF' carry (μ k0)) ⟩
-    size * size * size * (toℕ carry + toℕ (μ k0) + toℕ (μ lighi)) + size * size * (toℕ (μ lig)) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨ lemma₄ size (toℕ carry) (toℕ (μ k0)) (toℕ (μ lighi)) (toℕ (μ lig)) (toℕ (μ ehj)) (toℕ (μ f)) ⟩
-    size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * (size * toℕ (carry) + toℕ (μ lig)) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨ cong! (sym $ toℕ-combine carry (μ lig)) ⟩
-    size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * toℕ (combine carry (μ lig)) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨ cong (\ φ → size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * φ + size * toℕ (μ ehj) + toℕ (μ f)) $ sym $ toℕ-cast _ (combine carry (μ lig)) ⟩
-    size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * toℕ (cast _ (combine carry (μ lig))) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨ cong (\ φ → size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * toℕ (digitize (P.map μ id φ)) + size * toℕ (μ ehj) + toℕ (μ f)) $ sym -add-ehj-lig ⟩
-    size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * toℕ (digitize (P.map μ id (add small (zero , ehjhi , liglo)))) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨ cong (\ φ → size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * φ + size * toℕ (μ ehj) + toℕ (μ f)) -egjhi-liglo-proof ⟩
-    size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * toℕ (addF'3 (zero {1} , μ ehjhi , μ liglo)) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨⟩
-    size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * toℕ (addF' (addF' (zero {1}) (μ ehjhi)) (μ liglo)) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨ cong! (toℕ-addF' ((addF' (zero {1}) (μ ehjhi))) (μ liglo)) ⟩
-    size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * (toℕ (addF' (zero {1}) (μ ehjhi)) + toℕ (μ liglo)) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨ cong! (toℕ-addF' (zero {1}) (μ ehjhi)) ⟩
-    size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * ((toℕ (zero {1}) + toℕ (μ ehjhi)) + toℕ (μ liglo)) + size * toℕ (μ ehj) + toℕ (μ f)
-  ≡⟨ lemma₅ size (toℕ (μ k0)) (toℕ (μ lighi)) (toℕ (μ ehjhi)) (toℕ (μ liglo)) (toℕ (μ ehj)) (toℕ (μ f)) ⟩
-    size * size * (size * toℕ (μ k0)) + size * size * (size * toℕ (μ lighi) + toℕ (μ liglo)) + size * (size * toℕ (μ ehjhi) + toℕ (μ ehj)) + toℕ (μ f)
-  ≡⟨ cong! (sym $ toℕ-combine (μ ehjhi) (μ ehj)) ⟩
+    toℕ (combine (μ' k lig) (μ' ehj f))                                                                                                                                                                            ≡⟨ toℕ-combine (μ' k lig) (μ' ehj f) ⟩
+    size * size * ℕμ' k lig + ℕμ' ehj f                                                                                                                                                                            ≡⟨ cong! (toℕ-combine (μ k) (μ lig)) ⟩
+    size * size * (size * ℕμ k + ℕμ lig) + ℕμ' ehj f                                                                                                                                                               ≡⟨ cong! (toℕ-combine (μ ehj) (μ f)) ⟩
+    size * size * (size * ℕμ k + ℕμ lig) + (size * ℕμ ehj + ℕμ f)                                                                                                                                                  ≡⟨ lemma₃ size (ℕμ k) (ℕμ lig) (ℕμ ehj) (ℕμ f) ⟩
+    size * size * size * toℕ (μ k) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)                                                                                                                    ≡⟨ cong (\ φ → size * size * size * (φ + toℕ (μ k)) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)) $ *-comm (toℕ (zero {1})) size ⟩
+    size * size * size * (size * toℕ (zero {1}) + toℕ (μ k)) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)                                                                                          ≡⟨ cong (\ φ → size * size * size * (size * toℕ φ + toℕ (μ k)) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)) $ sym drop-carry-0  ⟩
+    size * size * size * (size * toℕ -drop-carry + toℕ (μ k)) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)                                                                                         ≡⟨ cong! (sym $ toℕ-combine -drop-carry (μ k)) ⟩
+    size * size * size * toℕ (combine -drop-carry (μ k)) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)                                                                                              ≡⟨ cong (\ φ → size * size * size * φ + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)) $ sym $ toℕ-cast _ (combine -drop-carry (μ k)) ⟩
+    size * size * size * toℕ (cast _ (combine -drop-carry (μ k))) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)                                                                                     ≡⟨ cong (\ φ → size * size * size * toℕ (digitize (P.map μ id φ)) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)) $ sym -add-k0-lig ⟩
+    size * size * size * toℕ (digitize (P.map μ id (add small (carry , k0 , lighi)))) + size * size * toℕ (μ lig) + size * toℕ (μ ehj) + toℕ (μ f)                                                                 ≡⟨ cong (\ φ → size * size * size * φ + size * size * (toℕ (μ lig)) + size * toℕ (μ ehj) + toℕ (μ f)) -k0-lighi-proof ⟩
+    size * size * size * toℕ (addF'3 (carry , μ k0 , μ lighi)) + size * size * (toℕ (μ lig)) + size * toℕ (μ ehj) + toℕ (μ f)                                                                                      ≡⟨⟩
+    size * size * size * toℕ (addF' (addF' carry (μ k0)) (μ lighi)) + size * size * (toℕ (μ lig)) + size * toℕ (μ ehj) + toℕ (μ f)                                                                                 ≡⟨ cong! (toℕ-addF' (addF' carry (μ k0)) (μ lighi)) ⟩
+    size * size * size * (toℕ (addF' carry (μ k0)) + toℕ (μ lighi)) + size * size * (toℕ (μ lig)) + size * toℕ (μ ehj) + toℕ (μ f)                                                                                 ≡⟨ cong! (toℕ-addF' carry (μ k0)) ⟩
+    size * size * size * (toℕ carry + toℕ (μ k0) + toℕ (μ lighi)) + size * size * (toℕ (μ lig)) + size * toℕ (μ ehj) + toℕ (μ f)                                                                                   ≡⟨ lemma₄ size (toℕ carry) (toℕ (μ k0)) (toℕ (μ lighi)) (toℕ (μ lig)) (toℕ (μ ehj)) (toℕ (μ f)) ⟩
+    size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * (size * toℕ (carry) + toℕ (μ lig)) + size * toℕ (μ ehj) + toℕ (μ f)                                                                          ≡⟨ cong! (sym $ toℕ-combine carry (μ lig)) ⟩
+    size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * toℕ (combine carry (μ lig)) + size * toℕ (μ ehj) + toℕ (μ f)                                                                                 ≡⟨ cong (\ φ → size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * φ + size * toℕ (μ ehj) + toℕ (μ f)) $ sym $ toℕ-cast _ (combine carry (μ lig)) ⟩
+    size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * toℕ (cast _ (combine carry (μ lig))) + size * toℕ (μ ehj) + toℕ (μ f)                                                                        ≡⟨ cong (\ φ → size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * toℕ (digitize (P.map μ id φ)) + size * toℕ (μ ehj) + toℕ (μ f)) $ sym -add-ehj-lig ⟩
+    size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * toℕ (digitize (P.map μ id (add small (zero , ehjhi , liglo)))) + size * toℕ (μ ehj) + toℕ (μ f)                                              ≡⟨ cong (\ φ → size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * φ + size * toℕ (μ ehj) + toℕ (μ f)) -egjhi-liglo-proof ⟩
+    size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * toℕ (addF'3 (zero {1} , μ ehjhi , μ liglo)) + size * toℕ (μ ehj) + toℕ (μ f)                                                                 ≡⟨⟩
+    size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * toℕ (addF' (addF' (zero {1}) (μ ehjhi)) (μ liglo)) + size * toℕ (μ ehj) + toℕ (μ f)                                                          ≡⟨ cong! (toℕ-addF' ((addF' (zero {1}) (μ ehjhi))) (μ liglo)) ⟩
+    size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * (toℕ (addF' (zero {1}) (μ ehjhi)) + toℕ (μ liglo)) + size * toℕ (μ ehj) + toℕ (μ f)                                                          ≡⟨ cong! (toℕ-addF' (zero {1}) (μ ehjhi)) ⟩
+    size * size * size * (toℕ (μ k0) + toℕ (μ lighi)) + size * size * ((toℕ (zero {1}) + toℕ (μ ehjhi)) + toℕ (μ liglo)) + size * toℕ (μ ehj) + toℕ (μ f)                                                          ≡⟨ lemma₅ size (toℕ (μ k0)) (toℕ (μ lighi)) (toℕ (μ ehjhi)) (toℕ (μ liglo)) (toℕ (μ ehj)) (toℕ (μ f)) ⟩
+    size * size * (size * toℕ (μ k0)) + size * size * (size * toℕ (μ lighi) + toℕ (μ liglo)) + size * (size * toℕ (μ ehjhi) + toℕ (μ ehj)) + toℕ (μ f)                                                             ≡⟨ cong! (sym $ toℕ-combine (μ ehjhi) (μ ehj)) ⟩
     size * size * (size * toℕ (μ k0)) + size * size * (size * toℕ (μ lighi) + toℕ (μ liglo)) + size * toℕ (combine (μ ehjhi) (μ ehj)) + toℕ (μ f)                                                                  ≡⟨⟩
     size * size * (size * toℕ (μ k0)) + size * size * (size * toℕ (μ lighi) + toℕ (μ liglo)) + size * toℕ (uncurry combine (P.map μ μ (ehjhi , ehj))) + toℕ (μ f)                                                  ≡⟨ cong (\ φ → size * size * (size * toℕ (μ k0)) + size * size * (size * toℕ (μ lighi) + toℕ (μ liglo)) + size * toℕ (uncurry combine (P.map μ μ φ)) + toℕ (μ f)) $ sym -add-ehj-eq ⟩
-    size * size * (size * toℕ (μ k0)) + size * size * (size * toℕ (μ lighi) + toℕ (μ liglo)) + size * toℕ (uncurry combine (P.map μ μ -added-ehj)) + toℕ (μ f)                                                      ≡⟨ cong! -add3-1-proof ⟩
+    size * size * (size * toℕ (μ k0)) + size * size * (size * toℕ (μ lighi) + toℕ (μ liglo)) + size * toℕ (uncurry combine (P.map μ μ -added-ehj)) + toℕ (μ f)                                                     ≡⟨ cong! -add3-1-proof ⟩
     size * size * (size * toℕ (μ k0)) + size * size * (size * toℕ (μ lighi) + toℕ (μ liglo)) + size * (toℕ (zero {1}) + toℕ (μ e) + toℕ (μ h) + toℕ (μ j)) + toℕ (μ f)                                             ≡⟨ cong! (sym $ toℕ-combine (μ lighi) (μ liglo)) ⟩
     size * size * (size * toℕ (μ k0)) + size * size * toℕ (combine (μ lighi) (μ liglo)) + size * (toℕ (zero {1}) + toℕ (μ e) + toℕ (μ h) + toℕ (μ j)) + toℕ (μ f)                                                  ≡⟨⟩
     size * size * (size * toℕ (μ k0)) + size * size * toℕ (uncurry combine (P.map μ μ (lighi , liglo))) + size * (toℕ (zero {1}) + toℕ (μ e) + toℕ (μ h) + toℕ (μ j)) + toℕ (μ f)                                  ≡⟨ cong (\ φ → size * size * (size * toℕ (μ k0)) + size * size * toℕ (uncurry combine (P.map μ μ φ)) + size * (toℕ (zero {2}) + toℕ (μ e) + toℕ (μ h) + toℕ (μ j)) + toℕ (μ f)) $ sym -add-lig-eq ⟩
     size * size * (size * toℕ (μ k0)) + size * size * toℕ (uncurry combine (P.map μ μ (add3Adder' {τ = τ} {size} {μ} adder zero l i g))) + size * (toℕ (zero {1}) + toℕ (μ e) + toℕ (μ h) + toℕ (μ j)) + toℕ (μ f) ≡⟨⟩
-    size * size * (size * toℕ (μ k0)) + size * size * toℕ (uncurry combine (P.map μ μ -added-lig)) + size * (toℕ (zero {1}) + toℕ (μ e) + toℕ (μ h) + toℕ (μ j)) + toℕ (μ f)                                        ≡⟨ cong!  -add3-2-proof ⟩
+    size * size * (size * toℕ (μ k0)) + size * size * toℕ (uncurry combine (P.map μ μ -added-lig)) + size * (toℕ (zero {1}) + toℕ (μ e) + toℕ (μ h) + toℕ (μ j)) + toℕ (μ f)                                       ≡⟨ cong!  -add3-2-proof ⟩
     (size * size * (size * toℕ (μ k0))) + (size * size * (toℕ (zero {1}) + toℕ (μ l) + toℕ (μ i) + toℕ (μ g))) + (size * (toℕ (zero {1}) + toℕ (μ e) + toℕ (μ h) + toℕ (μ j))) + (toℕ (μ f))                       ≡⟨⟩
     (size * size * (size * toℕ (μ k0))) + (size * size * (toℕ (μ l) + toℕ (μ i) + toℕ (μ g))) + (size * (toℕ (μ e) + toℕ (μ h) + toℕ (μ j))) + (toℕ (μ f))                                                         ≡⟨ lemma₂ size (ℕμ k0) (ℕμ l) (ℕμ i) (ℕμ g) (ℕμ e) (ℕμ h) (ℕμ j) (ℕμ f) ⟩
     (size * size * (size * toℕ (μ k0) + toℕ (μ l))) + (size * (size * toℕ (μ g) + toℕ (μ h))) + (size * (size * toℕ (μ i) + toℕ (μ j))) + (size * toℕ (μ e) + toℕ (μ f))                                           ≡⟨ cong! (sym $ toℕ-combine (μ e) (μ f)) ⟩
