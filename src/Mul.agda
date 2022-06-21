@@ -106,22 +106,41 @@ interpretUnit : ⊤ → Fin 1
 interpretUnit _ = zero
 
 
+
 -- absorb an interpretation into the adder to create a bigger one
-bigger-adder : {τ ρ υ : Set} {τ-size ρ-size υ-size : ℕ} {μ : τ → Fin τ-size} {ν : ρ → Fin ρ-size} {ξ : υ → Fin υ-size} → Adder μ ν → Adder μ ξ → Adder μ (F.join ρ-size υ-size ∘ S.map ν ξ)
+bigger-adder : {τ ρ υ : Set} {τ-size ρ-size υ-size : ℕ} {μ : τ → Fin τ-size}
+    {ν : ρ → Fin ρ-size} {ξ : υ → Fin υ-size}
+    → Adder μ ν → Adder μ ξ → Adder μ (F.join ρ-size υ-size ∘ S.map ν ξ)
 add (bigger-adder x y ) (τ , inj₁ ρ) = S.map₂ inj₁ $ x .add $ τ , ρ
 add (bigger-adder x y ) (τ , inj₂ ξ) = S.map₂ inj₂ $ y .add $ τ , ξ
-proof-add (bigger-adder {τ-size = τ-size} {ρ-size = ρ-size} {υ-size = υ-size} {μ = μ} {ν = ν} {ξ = ξ} x y)  (τ , inj₁ ρ) =
+proof-add (bigger-adder {τ-size = τ-size} {ρ-size = ρ-size} {υ-size = υ-size}
+    {μ = μ} {ν = ν} {ξ = ξ} x y)  (τ , inj₁ ρ) =
   begin
-    toℕ (F.join τ-size ρ-size union)
-  ≡⟨ x .proof-add (ρ , τ) ⟩
-    toℕ (uncurry addF' ((P.map (suc ∘ μ) ν) mnp ))
+    toℕ
+    (join τ-size (ρ-size + υ-size)
+    (map μ (join ρ-size υ-size ∘ map ν ξ)
+        (add (bigger-adder x y) (τ , inj₁ ρ))))
+  ≡⟨⟩
+    toℕ (uncurry addF' ((P.map (suc ∘ μ) (F.join ρ-size υ-size ∘ S.map ν ξ)) (τ , inj₁ ρ)))
+  ∎
+  where
+    open ≡-Reasoning
+    mnp = (τ , ρ)
+proof-add (bigger-adder {τ-size = τ-size} {ρ-size = ρ-size} {υ-size = υ-size}
+    {μ = μ} {ν = ν} {ξ = ξ} x y)  (τ , inj₂ ρ) =
+  begin
+    toℕ
+    (join τ-size (ρ-size + υ-size)
+    (map μ (join ρ-size υ-size ∘ map ν ξ)
+        (add (bigger-adder x y) (τ , inj₂ ρ))))
+  -- ≡⟨ x .proof-add (τ , ρ) ⟩
+  ≡⟨⟩
+    toℕ (uncurry addF' ((P.map (suc ∘ μ) (F.join ρ-size υ-size ∘ S.map ν ξ)) (τ , inj₂ ρ)))
   ∎
   where
     open ≡-Reasoning
 
     mnp = (τ , ρ)
-    union : Fin τ-size ⊎ Fin ρ-size
-    union = S.map μ ν (x .add mnp)
 
 -- ??? wtf
 -- commute-adder : Adder μ ν →  Adder ν μ
