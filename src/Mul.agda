@@ -70,11 +70,7 @@ record Adder {τ ρ : Set} {sizeτ sizeρ : ℕ} (μ : τ → Fin sizeτ) (ν : 
     proof-add
       : (mnp : τ × ρ)
       →
-      let
-      x : Fin sizeτ ⊎ Fin sizeρ
-      x = S.map μ ν (add mnp)
-      in
-      toℕ (F.join sizeτ sizeρ x) ≡ toℕ (uncurry addF' ((P.map (suc ∘ μ) ν) mnp))
+      toℕ (F.join sizeτ sizeρ $ S.map μ ν (add mnp)) ≡ toℕ (uncurry (addF' {m = sizeτ} {n = sizeρ})  ((P.map (suc ∘ μ) ν) mnp))
 open Adder
 
 --------------------------------------------------------------------------------
