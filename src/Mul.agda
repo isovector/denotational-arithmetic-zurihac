@@ -107,13 +107,21 @@ interpretUnit _ = zero
 
 
 -- absorb an interpretation into the adder to create a bigger one
-bigger-adder : {ρ τ υ : Set} {ρ-size τ-size υ-size : ℕ} {μ : ρ → Fin ρ-size} {ν : τ → Fin τ-size} {ξ : υ → Fin υ-size} → Adder μ ν → Adder μ ξ → Adder μ (F.join τ-size υ-size ∘ S.map ν ξ)
-add (bigger-adder x y ) (ρ , inj₁ τ) = S.map₂ inj₁ $ x .add $ ρ , τ
-add (bigger-adder x y ) (ρ , inj₂ ξ) = S.map₂ inj₂ $ y .add $ ρ , ξ
-proof-add (bigger-adder {σ-size = σ-size} {τ-size = τ-size} {μ = μ} {ν = ν} x y)  (cin , (mhi , mlo) , (nhi , nlo))
-    <?>
+bigger-adder : {τ ρ υ : Set} {τ-size ρ-size υ-size : ℕ} {μ : τ → Fin τ-size} {ν : ρ → Fin ρ-size} {ξ : υ → Fin υ-size} → Adder μ ν → Adder μ ξ → Adder μ (F.join ρ-size υ-size ∘ S.map ν ξ)
+add (bigger-adder x y ) (τ , inj₁ ρ) = S.map₂ inj₁ $ x .add $ τ , ρ
+add (bigger-adder x y ) (τ , inj₂ ξ) = S.map₂ inj₂ $ y .add $ τ , ξ
+proof-add (bigger-adder {τ-size = τ-size} {ρ-size = ρ-size} {υ-size = υ-size} {μ = μ} {ν = ν} {ξ = ξ} x y)  (τ , inj₁ ρ) =
+  begin
+    toℕ (F.join τ-size ρ-size union)
+  ≡⟨ x .proof-add (ρ , τ) ⟩
+    toℕ (uncurry addF' ((P.map (suc ∘ μ) ν) mnp ))
+  ∎
   where
+    open ≡-Reasoning
 
+    mnp = (τ , ρ)
+    union : Fin τ-size ⊎ Fin ρ-size
+    union = S.map μ ν (x .add mnp)
 
 -- ??? wtf
 -- commute-adder : Adder μ ν →  Adder ν μ
