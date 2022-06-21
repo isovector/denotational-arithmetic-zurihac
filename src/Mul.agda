@@ -117,7 +117,7 @@ proof-add (bigger-adder {τ-size = τ-size} {ρ-size = ρ-size} {υ-size = υ-si
     (map μ (join ρ-size υ-size ∘ map ν ξ)
         (add (bigger-adder x y) (τ , inj₁ ρ))))
   ≡⟨⟩
-    toℕ (uncurry addF' ((P.map (suc ∘ μ) (F.join ρ-size υ-size ∘ S.map ν ξ)) (τ , inj₁ ρ)))
+    toℕ (uncurry (addF' {m = τ-size} {n = ρ-size + υ-size}) ((P.map (suc ∘ μ) (F.join ρ-size υ-size ∘ S.map ν ξ)) (τ , inj₁ ρ)))
   ∎
   where
     open ≡-Reasoning
@@ -131,7 +131,7 @@ proof-add (bigger-adder {τ-size = τ-size} {ρ-size = ρ-size} {υ-size = υ-si
         (add (bigger-adder x y) (τ , inj₂ ρ))))
   -- ≡⟨ x .proof-add (τ , ρ) ⟩
   ≡⟨⟩
-    toℕ (uncurry addF' ((P.map (suc ∘ μ) (F.join ρ-size υ-size ∘ S.map ν ξ)) (τ , inj₂ ρ)))
+    toℕ (uncurry (addF' {m = τ-size} {n = ρ-size + υ-size}) ((P.map (suc ∘ μ) (F.join ρ-size υ-size ∘ S.map ν ξ)) (τ , inj₂ ρ)))
   ∎
   where
     open ≡-Reasoning
