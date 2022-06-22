@@ -166,8 +166,14 @@ allBools2x2x2x2 = composeTheValues allBools2x2 allBools2x2
 allBools2x2x2 : Vec ((⊤ ⊎ ⊤) × ((⊤ ⊎ ⊤) × (⊤ ⊎ ⊤))) 8
 allBools2x2x2 = composeTheValues allBools allBools2x2
 
-_ : (V.map (toℕ ∘ interpretSum {ν = interpretUnit} {ξ = interpretSum} ∘ (add bitAdder) ∘ (_ ,_) ) allBools)
-  ≡ (0 ∷ 1  ∷ 2 ∷ 3
+_ : toℕ (interpretSum {ν = interpretUnit} {ξ = interpretSum {ν = interpretUnit} {ξ = interpretUnit} } (add bitAdder (_ , (inj₂ _)))) ≡ 2
+_ = refl
+
+_ : toℕ (interpretSum {ν = interpretUnit} {ξ = interpretSum {ν = interpretUnit} {ξ = interpretUnit} } (add bitAdder (_ , (inj₁ _)))) ≡ 1
+_ = refl
+
+_ : (V.map (toℕ ∘ interpretSum {ν = interpretUnit} {ξ = interpretSum {ν = interpretUnit} {ξ = interpretUnit} } ∘ (add bitAdder) ∘ (_ ,_) ) allBools)
+  ≡ (1 ∷ 2
    ∷ [])
 _ = refl
 
