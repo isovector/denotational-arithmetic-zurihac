@@ -101,6 +101,9 @@ postulate toℕ-combine : ∀ {m n} (i : Fin m) (j : Fin n) → toℕ (combine i
 interpretUnit : ⊤ → Fin 1
 interpretUnit _ = zero
 
+unitAdder : Adder interpretUnit interpretUnit
+add unitAdder (⊤ , ⊤) = inj₂ ⊤
+proof-add unitAdder (⊤ , ⊤) = refl
 
 
 -- absorb an interpretation into the adder to create a bigger one
@@ -137,6 +140,14 @@ proof-add (bigger-adder {τ-size = τ-size} {ρ-size = ρ-size} {υ-size = υ-si
     open ≡-Reasoning
 
     mnp = (τ , ρ)
+
+
+
+bitAdder : {σ : Set} → Adder interpretUnit (σ → Fin 2)
+bitAdder = bigger-adder unitAdder unitAdder
+
+
+
 
 -- ??? wtf
 -- commute-adder : Adder μ ν →  Adder ν μ
