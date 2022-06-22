@@ -100,54 +100,82 @@ postulate toℕ-combine : ∀ {m n} (i : Fin m) (j : Fin n) → toℕ (combine i
 -- Adder interpretUnit x doubles the size of x
 interpretUnit : ⊤ → Fin 1
 interpretUnit _ = zero
-
 unitAdder : Adder interpretUnit interpretUnit
 add unitAdder (⊤ , ⊤) = inj₂ ⊤
 proof-add unitAdder (⊤ , ⊤) = refl
 
+interpretSum : {ρ υ : Set} {ρ-size υ-size : ℕ} {ν : ρ → Fin ρ-size} {ξ : υ → Fin υ-size} → ρ ⊎ υ → Fin (ρ-size + υ-size)
+interpretSum {ρ-size = ρ-size} {υ-size = υ-size} {ν = ν} {ξ = ξ} = F.join ρ-size υ-size ∘ S.map ν ξ
 
 -- absorb an interpretation into the adder to create a bigger one
 bigger-adder : {τ ρ υ : Set} {τ-size ρ-size υ-size : ℕ} {μ : τ → Fin τ-size}
     {ν : ρ → Fin ρ-size} {ξ : υ → Fin υ-size}
-    → Adder μ ν → Adder μ ξ → Adder μ (F.join ρ-size υ-size ∘ S.map ν ξ)
+    → Adder μ ν → Adder μ ξ → Adder μ (interpretSum {ν = ν} {ξ = ξ})
 add (bigger-adder x y ) (τ , inj₁ ρ) = S.map₂ inj₁ $ x .add $ τ , ρ
 add (bigger-adder x y ) (τ , inj₂ ξ) = S.map₂ inj₂ $ y .add $ τ , ξ
 proof-add (bigger-adder {τ-size = τ-size} {ρ-size = ρ-size} {υ-size = υ-size}
     {μ = μ} {ν = ν} {ξ = ξ} x y)  (τ , inj₁ ρ) =
-  begin
-    toℕ
-    (join τ-size (ρ-size + υ-size)
-    (map μ (join ρ-size υ-size ∘ map ν ξ)
-        (add (bigger-adder x y) (τ , inj₁ ρ))))
-  ≡⟨⟩
-    toℕ (uncurry (addF' {m = τ-size} {n = ρ-size + υ-size}) ((P.map (suc ∘ μ) (F.join ρ-size υ-size ∘ S.map ν ξ)) (τ , inj₁ ρ)))
-  ∎
+    {!!}
+  -- begin
+  --   toℕ
+  --   (join τ-size (ρ-size + υ-size)
+  --   (map μ (join ρ-size υ-size ∘ map ν ξ)
+  --       (add (bigger-adder x y) (τ , inj₁ ρ))))
+  -- ≡⟨⟩
+  --   toℕ (uncurry (addF' {m = τ-size} {n = ρ-size + υ-size}) ((P.map (suc ∘ μ) (F.join ρ-size υ-size ∘ S.map ν ξ)) (τ , inj₁ ρ)))
+  -- ∎
   where
     open ≡-Reasoning
     mnp = (τ , ρ)
 proof-add (bigger-adder {τ-size = τ-size} {ρ-size = ρ-size} {υ-size = υ-size}
-    {μ = μ} {ν = ν} {ξ = ξ} x y)  (τ , inj₂ ρ) =
-  begin
-    toℕ
-    (join τ-size (ρ-size + υ-size)
-    (map μ (join ρ-size υ-size ∘ map ν ξ)
-        (add (bigger-adder x y) (τ , inj₂ ρ))))
-  -- ≡⟨ x .proof-add (τ , ρ) ⟩
-  ≡⟨⟩
-    toℕ (uncurry (addF' {m = τ-size} {n = ρ-size + υ-size}) ((P.map (suc ∘ μ) (F.join ρ-size υ-size ∘ S.map ν ξ)) (τ , inj₂ ρ)))
-  ∎
+    {μ = μ} {ν = ν} {ξ = ξ} x y)  (τ , inj₂ ρ) = {!!}
+  -- begin
+  --   toℕ
+  --   (join τ-size (ρ-size + υ-size)
+  --   (map μ (join ρ-size υ-size ∘ map ν ξ)
+  --       (add (bigger-adder x y) (τ , inj₂ ρ))))
+  -- -- ≡⟨ x .proof-add (τ , ρ) ⟩
+  -- ≡⟨
+  --   toℕ (uncurry (addF' {m = τ-size} {n = ρ-size + υ-size}) ((P.map (suc ∘ μ) (F.join ρ-size υ-size ∘ S.map ν ξ)) (τ , inj₂ ρ)))
+  -- ∎
   where
     open ≡-Reasoning
 
     mnp = (τ , ρ)
 
 
-
-bitAdder : {σ : Set} → Adder interpretUnit (σ → Fin 2)
+bitAdder : Adder interpretUnit interpretSum
 bitAdder = bigger-adder unitAdder unitAdder
 
 
+composeTheValues : {A B : Set} {m n : ℕ} → Vec A m → Vec B n → Vec (A × B) (m * n)
+composeTheValues as bs = concat $ V.map (λ a → V.map (a ,_) bs) as
 
+allBools : Vec (⊤ ⊎ ⊤)  2
+allBools = (inj₁ _) ∷ (inj₂ _) ∷ []
+
+
+
+allBools2x2 : Vec ((⊤ ⊎ ⊤) × (⊤ ⊎ ⊤)) 4
+allBools2x2 = composeTheValues allBools allBools
+
+allBools2x2x2x2 : Vec (((⊤ ⊎ ⊤) × (⊤ ⊎ ⊤)) × ((⊤ ⊎ ⊤) × (⊤ ⊎ ⊤))) 16
+allBools2x2x2x2 = composeTheValues allBools2x2 allBools2x2
+
+
+allBools2x2x2 : Vec ((⊤ ⊎ ⊤) × ((⊤ ⊎ ⊤) × (⊤ ⊎ ⊤))) 8
+allBools2x2x2 = composeTheValues allBools allBools2x2
+
+_ : (V.map (toℕ ∘ interpretSum {ν = interpretUnit} {ξ = interpretSum} ∘ (add bitAdder) ∘ (_ ,_) ) allBools)
+  ≡ (0 ∷ 1  ∷ 2 ∷ 3
+   ∷ [])
+_ = refl
+
+-- _ : (V.map (toℕ ∘ interpretSum ∘ (add bitAdder)) allBools2x2x2)
+--   ≡ (0 ∷ 1 ∷ 2 ∷ 3
+--    ∷ 1 ∷ 1 ∷ 2 ∷ 3
+--    ∷ [])
+-- _ = refl
 
 -- ??? wtf
 -- commute-adder : Adder μ ν →  Adder ν μ
