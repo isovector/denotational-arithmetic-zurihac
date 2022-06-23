@@ -63,14 +63,14 @@ addF'3 (m , n , p) = addF' (addF' m n) p
 
 --------------------------------------------------------------------------------
 
-record Adder {τ ρ : Set} {sizeτ sizeρ : ℕ} (μ : τ → Fin sizeτ) (ν : ρ → Fin sizeρ) : Set where
+record Adder {τ ρ : Set} {sizeτ sizeρ : ℕ} (μ : τ → Fin (suc sizeτ)) (ν : ρ → Fin sizeρ) : Set where
   constructor adds
   field
     add : τ × ρ → τ ⊎ ρ
     proof-add
       : (mnp : τ × ρ)
       →
-      toℕ (F.join sizeτ sizeρ $ S.map μ ν (add mnp)) ≡ toℕ (uncurry (addF' {m = sizeτ} {n = sizeρ})  ((P.map (suc ∘ μ) ν) mnp))
+      toℕ (F.join (suc sizeτ) sizeρ $ S.map μ ν (add mnp)) ≡ toℕ (uncurry (addF' {m = sizeτ} {n = sizeρ})  ((P.map μ ν) mnp))
 open Adder
 
 --------------------------------------------------------------------------------
@@ -101,14 +101,14 @@ postulate toℕ-combine : ∀ {m n} (i : Fin m) (j : Fin n) → toℕ (combine i
 interpretUnit : ⊤ → Fin 1
 interpretUnit _ = zero
 unitAdder : Adder interpretUnit interpretUnit
-add unitAdder (⊤ , ⊤) = inj₂ ⊤
+add unitAdder (⊤ , ⊤) = inj₁ ⊤
 proof-add unitAdder (⊤ , ⊤) = refl
 
 interpretSum : {ρ υ : Set} {ρ-size υ-size : ℕ} {ν : ρ → Fin ρ-size} {ξ : υ → Fin υ-size} → ρ ⊎ υ → Fin (ρ-size + υ-size)
 interpretSum {ρ-size = ρ-size} {υ-size = υ-size} {ν = ν} {ξ = ξ} = F.join ρ-size υ-size ∘ S.map ν ξ
 
 -- absorb an interpretation into the adder to create a bigger one
-bigger-adder : {τ ρ υ : Set} {τ-size ρ-size υ-size : ℕ} {μ : τ → Fin τ-size}
+bigger-adder : {τ ρ υ : Set} {τ-size ρ-size υ-size : ℕ} {μ : τ → Fin (suc τ-size)}
     {ν : ρ → Fin ρ-size} {ξ : υ → Fin υ-size}
     → Adder μ ν → Adder μ ξ → Adder μ (interpretSum {ν = ν} {ξ = ξ})
 add (bigger-adder x y ) (τ , inj₁ ρ) = S.map₂ inj₁ $ x .add $ τ , ρ
@@ -166,14 +166,14 @@ allBools2x2x2x2 = composeTheValues allBools2x2 allBools2x2
 allBools2x2x2 : Vec ((⊤ ⊎ ⊤) × ((⊤ ⊎ ⊤) × (⊤ ⊎ ⊤))) 8
 allBools2x2x2 = composeTheValues allBools allBools2x2
 
-_ : toℕ (interpretSum {ν = interpretUnit} {ξ = interpretSum {ν = interpretUnit} {ξ = interpretUnit} } (add bitAdder (_ , (inj₂ _)))) ≡ 2
+_ : toℕ (interpretSum {ν = interpretUnit} {ξ = interpretSum {ν = interpretUnit} {ξ = interpretUnit} } (add bitAdder (_ , (inj₂ _)))) ≡ 0
 _ = refl
 
-_ : toℕ (interpretSum {ν = interpretUnit} {ξ = interpretSum {ν = interpretUnit} {ξ = interpretUnit} } (add bitAdder (_ , (inj₁ _)))) ≡ 1
+_ : toℕ (interpretSum {ν = interpretUnit} {ξ = interpretSum {ν = interpretUnit} {ξ = interpretUnit} } (add bitAdder (_ , (inj₁ _)))) ≡ 0
 _ = refl
 
 _ : (V.map (toℕ ∘ interpretSum {ν = interpretUnit} {ξ = interpretSum {ν = interpretUnit} {ξ = interpretUnit} } ∘ (add bitAdder) ∘ (_ ,_) ) allBools)
-  ≡ (1 ∷ 2
+  ≡ (0 ∷ 0
    ∷ [])
 _ = refl
 
